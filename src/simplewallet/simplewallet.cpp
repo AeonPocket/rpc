@@ -506,7 +506,7 @@ bool simple_wallet::open_wallet(const string &wallet_file, const std::string& pa
 
   m_wallet->init(m_daemon_address);
 
-  refresh(std::vector<std::string>());
+  // refresh(std::vector<std::string>());
   success_msg_writer() <<
     "**********************************************************************\n" <<
     "Use \"help\" command to see the list of available commands.\n" <<
@@ -1179,7 +1179,7 @@ int main(int argc, char* argv[])
       LOG_PRINT_L0("Loading wallet...");
       wal.load(wallet_file, wallet_password);
       wal.init(daemon_address);
-      wal.refresh();
+      // wal.refresh();
       LOG_PRINT_GREEN("Loaded ok", LOG_LEVEL_0);
     }
     catch (const std::exception& e)
