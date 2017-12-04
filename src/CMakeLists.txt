@@ -12,6 +12,7 @@ file(GLOB_RECURSE CONN_TOOL connectivity_tool/*)
 file(GLOB_RECURSE WALLET wallet/*)
 file(GLOB_RECURSE MINER miner/*)
 file(GLOB_RECURSE RINGCT ringct/*)
+file(GLOB_RECURSE WEB_WALLET web_wallet/*)
 
 source_group(common FILES ${COMMON})
 source_group(crypto FILES ${CRYPTO})
@@ -25,6 +26,7 @@ source_group(simplewallet FILES ${SIMPLEWALLET})
 source_group(connectivity-tool FILES ${CONN_TOOL})
 source_group(wallet FILES ${WALLET})
 source_group(simpleminer FILES ${MINER})
+source_group(web_wallet FILES ${WEB_WALLET})
 
 add_library(ringct ${RINGCT})
 add_library(common ${COMMON})
@@ -43,6 +45,7 @@ target_link_libraries(simplewallet wallet rpc cryptonote_core crypto common ring
 add_dependencies(daemon version)
 add_dependencies(rpc version)
 add_dependencies(simplewallet version)
+add_executable(web_wallet ${WEB_WALLET})
 
 set_property(TARGET common crypto cryptonote_core rpc wallet PROPERTY FOLDER "libs")
 set_property(TARGET daemon simplewallet connectivity_tool simpleminer PROPERTY FOLDER "prog")
