@@ -17,11 +17,7 @@ namespace rpc
       std::string seed;
 
       BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(destinations)
-        KV_SERIALIZE(fee)
-        KV_SERIALIZE(mixin)
-        KV_SERIALIZE(unlock_time)
-        KV_SERIALIZE(payment_id)
+		  KV_SERIALIZE(seed)
       END_KV_SERIALIZE_MAP()
     };
 

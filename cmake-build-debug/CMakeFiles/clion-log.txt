@@ -1,0 +1,95 @@
+D:\clion\bin\cmake\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" D:\git\aeon_local
+CMake Warning at D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:107 (find_package)
+
+
+CMake Warning at D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:107 (find_package)
+
+
+CMake Warning at D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:107 (find_package)
+
+
+CMake Warning at D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:107 (find_package)
+
+
+CMake Warning at D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:107 (find_package)
+
+
+CMake Warning at D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:107 (find_package)
+
+
+CMake Warning at D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:107 (find_package)
+
+
+CMake Warning at D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:765 (message):
+  Imported targets not available for Boost version 106501
+Call Stack (most recent call first):
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:869 (_Boost_COMPONENT_DEPENDENCIES)
+  D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1472 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:107 (find_package)
+
+
+CMake Error at D:/clion/bin/cmake/share/cmake-3.8/Modules/FindBoost.cmake:1842 (message):
+  Unable to find the requested Boost libraries.
+
+  Boost version: 1.65.1
+
+  Boost include path: C:/local/boost_1_65_1
+
+  Could not find the following Boost libraries:
+
+          boost_system
+          boost_filesystem
+          boost_thread
+          boost_date_time
+          boost_chrono
+          boost_regex
+          boost_serialization
+          boost_program_options
+
+  No Boost libraries were found.  You may need to set BOOST_LIBRARYDIR to the
+  directory containing Boost libraries or BOOST_ROOT to the location of
+  Boost.
+Call Stack (most recent call first):
+  CMakeLists.txt:107 (find_package)
+
+
+-- Found Git: C:/Program Files/Git/cmd/git.exe
+-- Found PythonInterp: C:/Python27/python.exe (found version "2.7.10") 
+-- Configuring incomplete, errors occurred!
+See also "D:/git/aeon_local/cmake-build-debug/CMakeFiles/CMakeOutput.log".
+See also "D:/git/aeon_local/cmake-build-debug/CMakeFiles/CMakeError.log".

@@ -32,21 +32,21 @@ namespace web_wallet
     BEGIN_URI_MAP2()
       BEGIN_JSON_RPC_MAP("/json_rpc")
         MAP_JON_RPC_WE("set_wallet",         on_set_wallet,         rpc::COMMAND_RPC_SET_WALLET)
-        MAP_JON_RPC_WE("getbalance",         on_getbalance,         rpc::COMMAND_RPC_GET_BALANCE)
-        MAP_JON_RPC_WE("getaddress",         on_getaddress,         rpc::COMMAND_RPC_GET_ADDRESS)
-        MAP_JON_RPC_WE("transfer",           on_transfer,           rpc::COMMAND_RPC_TRANSFER)
-        MAP_JON_RPC_WE("transfer_split",     on_transfer_split,     rpc::COMMAND_RPC_TRANSFER_SPLIT)
-        MAP_JON_RPC_WE("store",              on_store,              rpc::COMMAND_RPC_STORE)
-        MAP_JON_RPC_WE("get_payments",       on_get_payments,       rpc::COMMAND_RPC_GET_PAYMENTS)
-        MAP_JON_RPC_WE("get_bulk_payments",  on_get_bulk_payments,  rpc::COMMAND_RPC_GET_BULK_PAYMENTS)
-        MAP_JON_RPC_WE("incoming_transfers", on_incoming_transfers, rpc::COMMAND_RPC_INCOMING_TRANSFERS)
-        MAP_JON_RPC_WE("query_key",         on_query_key,         rpc::COMMAND_RPC_QUERY_KEY)
+      //  MAP_JON_RPC_WE("getbalance",         on_getbalance,         rpc::COMMAND_RPC_GET_BALANCE)
+      //  MAP_JON_RPC_WE("getaddress",         on_getaddress,         rpc::COMMAND_RPC_GET_ADDRESS)
+      //  MAP_JON_RPC_WE("transfer",           on_transfer,           rpc::COMMAND_RPC_TRANSFER)
+      //  MAP_JON_RPC_WE("transfer_split",     on_transfer_split,     rpc::COMMAND_RPC_TRANSFER_SPLIT)
+      //  MAP_JON_RPC_WE("store",              on_store,              rpc::COMMAND_RPC_STORE)
+      //  MAP_JON_RPC_WE("get_payments",       on_get_payments,       rpc::COMMAND_RPC_GET_PAYMENTS)
+      //  MAP_JON_RPC_WE("get_bulk_payments",  on_get_bulk_payments,  rpc::COMMAND_RPC_GET_BULK_PAYMENTS)
+      //  MAP_JON_RPC_WE("incoming_transfers", on_incoming_transfers, rpc::COMMAND_RPC_INCOMING_TRANSFERS)
+      //  MAP_JON_RPC_WE("query_key",         on_query_key,         rpc::COMMAND_RPC_QUERY_KEY)
       END_JSON_RPC_MAP()
     END_URI_MAP2()
 
       //json_rpc
       bool on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er, connection_context& cntx);
-      bool on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, connection_context& cntx);
+     /* bool on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool on_getaddress(const rpc::COMMAND_RPC_GET_ADDRESS::request& req, rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool validate_transfer(const std::list<rpc::transfer_destination> destinations, const std::string payment_id, std::vector<cryptonote::tx_destination_entry>& dsts, std::vector<uint8_t>& extra, epee::json_rpc::error& er);
       bool on_transfer(const rpc::COMMAND_RPC_TRANSFER::request& req, rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, connection_context& cntx);
@@ -55,13 +55,13 @@ namespace web_wallet
       bool on_get_payments(const rpc::COMMAND_RPC_GET_PAYMENTS::request& req, rpc::COMMAND_RPC_GET_PAYMENTS::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool on_get_bulk_payments(const rpc::COMMAND_RPC_GET_BULK_PAYMENTS::request& req, rpc::COMMAND_RPC_GET_BULK_PAYMENTS::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er, connection_context& cntx);
-
+*/
       bool handle_command_line(const boost::program_options::variables_map& vm);
 
       //json rpc v2
-      bool on_query_key(const rpc::COMMAND_RPC_QUERY_KEY::request& req, rpc::COMMAND_RPC_QUERY_KEY::response& res, epee::json_rpc::error& er, connection_context& cntx);
+      //bool on_query_key(const rpc::COMMAND_RPC_QUERY_KEY::request& req, rpc::COMMAND_RPC_QUERY_KEY::response& res, epee::json_rpc::error& er, connection_context& cntx);
 
-      tools::wallet2& m_wallet;
+      //tools::wallet2& m_wallet;
       std::string m_port;
       std::string m_bind_ip;
   };
