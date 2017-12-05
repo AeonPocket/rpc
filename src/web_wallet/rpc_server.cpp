@@ -47,9 +47,13 @@ using namespace epee;
 namespace web_wallet
 {
   //-----------------------------------------------------------------------------------
-  const command_line::arg_descriptor<std::string> rpc_server::arg_rpc_bind_port = {"rpc-bind-port", "Starts wallet as rpc server for wallet operations, sets bind port for server", "12345", true};
+  const command_line::arg_descriptor<std::string> rpc_server::arg_rpc_bind_port = {"rpc-bind-port", "Starts wallet as rpc server for wallet operations, sets bind port for server", "11191", true};
   const command_line::arg_descriptor<std::string> rpc_server::arg_rpc_bind_ip = {"rpc-bind-ip", "Specify ip to bind rpc server", "127.0.0.1"};
-  boost::filesystem::path TEMP_DIR ("C:\\tmp");
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+  boost::filesystem::path TEMP_DIR("C:\\tmp");
+#else
+  boost::filesystem::path TEMP_DIR("/tmp");
+#endif
   void rpc_server::init_options(boost::program_options::options_description& desc)
   {
     command_line::add_arg(desc, arg_rpc_bind_ip);
@@ -127,6 +131,7 @@ namespace web_wallet
 	  std::string l_path_keys = l_path.string();
       remove(l_path_keys.append(".keys").c_str());
 	  crypto::ElectrumWords::bytes_to_words(recovery_param, res.seed);
+	  res.seed = string_tools::trim(res.seed);
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
     }
