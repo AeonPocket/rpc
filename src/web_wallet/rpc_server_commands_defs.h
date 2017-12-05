@@ -33,6 +33,28 @@ namespace rpc
     };
   };
 
+    struct COMMAND_RPC_CREATE_WALLET
+  {
+    struct request
+    {
+      BEGIN_KV_SERIALIZE_MAP()
+      END_KV_SERIALIZE_MAP()
+    };
+
+    struct response
+    {
+      std::string seed;
+	  std::string address;
+	  std::string key;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(seed)
+	    KV_SERIALIZE(address)
+	    KV_SERIALIZE(key)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
   struct COMMAND_RPC_GET_BALANCE
   {
     struct request
