@@ -46,6 +46,7 @@ add_dependencies(daemon version)
 add_dependencies(rpc version)
 add_dependencies(simplewallet version)
 add_executable(web_wallet ${WEB_WALLET})
+target_link_libraries(web_wallet wallet rpc cryptonote_core crypto common ringct libminiupnpc-static ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
 
 set_property(TARGET common crypto cryptonote_core rpc wallet PROPERTY FOLDER "libs")
 set_property(TARGET daemon simplewallet connectivity_tool simpleminer PROPERTY FOLDER "prog")

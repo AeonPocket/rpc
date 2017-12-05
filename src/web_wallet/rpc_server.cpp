@@ -82,7 +82,7 @@ namespace web_wallet
   
   
   //------------------------------------------------------------------------------------------------------------------------------
- bool on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
+  bool rpc_server::on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
   {
     try
     {
