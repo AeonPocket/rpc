@@ -31,6 +31,8 @@
 #include "include_base_utils.h"
 using namespace epee;
 
+#include <chrono>
+#include <iostream>
 #include "rpc_server.h"
 #include "common/command_line.h"
 #include "cryptonote_core/cryptonote_format_utils.h"
@@ -39,6 +41,7 @@ using namespace epee;
 #include "misc_language.h"
 #include "string_tools.h"
 #include "crypto/hash.h"
+#include "crypto/electrum-words.h"
 #include "wallet/wallet2.h"
 
 namespace web_wallet
@@ -86,9 +89,18 @@ namespace web_wallet
   {
     try
     {
-		
-    ////std::string filepath = std::tmpnam(nullptr);//"/tmp/" + std::to_string(system_clock::now().time_since_epoch());
-		res.address = std::string("Address");
+      crypto::secret_key recovery_param;
+      crypto::ElectrumWords::words_to_bytes(req.seed, recovery_param);
+      tools::wallet2* m_wallet = new tools::wallet2();
+      
+      m_wallet->generate("/tmp/wallet", "y", recovery_param, true, false);
+      m_wallet->load("/tmp/wallet", "y");
+      remove("/tmp/wallet");
+      remove("/tmp/wallet.address.txt");
+      remove("/tmp/wallet.keys");
+      
+      res.address = m_wallet->get_account().get_public_address_str();
+      res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
     }
     catch (std::exception& e)
     {

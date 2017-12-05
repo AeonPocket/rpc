@@ -61,7 +61,7 @@ namespace web_wallet
       //json rpc v2
       //bool on_query_key(const rpc::COMMAND_RPC_QUERY_KEY::request& req, rpc::COMMAND_RPC_QUERY_KEY::response& res, epee::json_rpc::error& er, connection_context& cntx);
 
-      //tools::wallet2& m_wallet;
+      // tools::wallet2& m_wallet;
       std::string m_port;
       std::string m_bind_ip;
   };

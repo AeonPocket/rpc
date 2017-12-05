@@ -17,16 +17,18 @@ namespace rpc
       std::string seed;
 
       BEGIN_KV_SERIALIZE_MAP()
-		  KV_SERIALIZE(seed)
+		    KV_SERIALIZE(seed)
       END_KV_SERIALIZE_MAP()
     };
 
     struct response
     {
       std::string address;
+      std::string key;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(address)
+        KV_SERIALIZE(key)
       END_KV_SERIALIZE_MAP()
     };
   };
