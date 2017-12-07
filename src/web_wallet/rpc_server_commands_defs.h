@@ -25,16 +25,17 @@ namespace rpc
     {
       std::string address;
       std::string key;
-	  uint64_t 	 balance;
+      std::string spend_key;
+	    uint64_t 	 balance;
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(address)
         KV_SERIALIZE(key)
-		KV_SERIALIZE(balance)
+		    KV_SERIALIZE(spend_key)
       END_KV_SERIALIZE_MAP()
     };
   };
 
-    struct COMMAND_RPC_CREATE_WALLET
+  struct COMMAND_RPC_CREATE_WALLET
   {
     struct request
     {
@@ -45,13 +46,13 @@ namespace rpc
     struct response
     {
       std::string seed;
-	  std::string address;
-	  std::string key;
+	    std::string address;
+	    std::string key;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(seed)
-	    KV_SERIALIZE(address)
-	    KV_SERIALIZE(key)
+        KV_SERIALIZE(address)
+        KV_SERIALIZE(key)
       END_KV_SERIALIZE_MAP()
     };
   };
@@ -62,8 +63,9 @@ namespace rpc
     struct request
     {
       std::string seed;
+
       BEGIN_KV_SERIALIZE_MAP()
-		    KV_SERIALIZE(seed)
+        KV_SERIALIZE(seed)
       END_KV_SERIALIZE_MAP()
     };
 
