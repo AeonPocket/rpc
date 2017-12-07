@@ -30,6 +30,8 @@
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <iostream>
 
 #include <boost/utility/value_init.hpp>
 #include "include_base_utils.h"
@@ -577,6 +579,17 @@ void wallet2::load(const std::string& wallet_, const std::string& password)
   }
   m_local_bc_height = m_blockchain.size();
 }
+//----------------------------------------------------------------------------------------------------
+void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers) 
+{
+  m_account.set_createtime(account_create_time);
+  m_local_bc_height = local_bc_height;
+  // string_tools::hex_to_pod(transfers, m_transfers);
+  std::stringstream ss;
+  ss.str(transfers);
+  boost::archive::text_iarchive ia{ss};
+  ia >> m_transfers;
+};
 //----------------------------------------------------------------------------------------------------
 void wallet2::store()
 {

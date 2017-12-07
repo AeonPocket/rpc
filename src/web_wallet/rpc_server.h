@@ -59,7 +59,7 @@ namespace web_wallet
 
       bool handle_command_line(const boost::program_options::variables_map& vm);
 
-      bool create_wallet_from_seed(tools::wallet2* m_wallet, std::string seed);
+      bool create_wallet_from_seed(tools::wallet2* m_wallet, std::string seed, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers);
 
       //json rpc v2
       //bool on_query_key(const rpc::COMMAND_RPC_QUERY_KEY::request& req, rpc::COMMAND_RPC_QUERY_KEY::response& res, epee::json_rpc::error& er, connection_context& cntx);

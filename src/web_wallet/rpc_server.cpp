@@ -31,6 +31,7 @@
 #include "include_base_utils.h"
 using namespace epee;
 
+#include <boost/archive/text_oarchive.hpp>
 #include <chrono>
 #include <iostream>
 #include "rpc_server.h"
@@ -92,18 +93,20 @@ namespace web_wallet
 	  return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::create_wallet_from_seed(tools::wallet2* m_wallet, std::string seed) {
+  bool rpc_server::create_wallet_from_seed(tools::wallet2* m_wallet, std::string seed, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers) {
     crypto::secret_key recovery_param;
     crypto::ElectrumWords::words_to_bytes(seed, recovery_param);
     
 
     boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
+    // boost::filesystem::path l_path = "/home/pushkar/Documents/aur/aeon/build/release/src/wallet";
     std::string l_path_address = l_path.string();
     std::string l_path_keys = l_path.string();
 
     m_wallet->init(m_daemon_address);
-    m_wallet->generate(l_path.string(), "y", recovery_param, true, false);
+    m_wallet->generate(l_path.string(), "y", recovery_param, false, false);
     m_wallet->load(l_path.string(), "y");
+    m_wallet->load(account_create_time, local_bc_height, transfers);
     remove(l_path.string().c_str());
     remove(l_path_address.append(".address.txt").c_str());
     remove(l_path_keys.append(".keys").c_str());
@@ -115,7 +118,7 @@ namespace web_wallet
     try
     {
       tools::wallet2* m_wallet = new tools::wallet2();
-      create_wallet_from_seed(m_wallet, req.seed);
+      create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
       res.spend_key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_spend_secret_key);
@@ -159,32 +162,36 @@ namespace web_wallet
     }
     return true;
   }
-  ////------------------------------------------------------------------------------------------------------------------------------
+  //------------------------------------------------------------------------------------------------------------------------------
   bool rpc_server::on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
   {
     try
     {
       tools::wallet2* m_wallet = new tools::wallet2();
-      create_wallet_from_seed(m_wallet, req.seed);
+      create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
       // m_wallet->refresh();
 
 	    tools::wallet2::transfer_container transfers;
 	    m_wallet->get_transfers(transfers);
+      std::ostringstream stream;
+      boost::archive::text_oarchive oa{stream};
+      oa<<transfers;
+      res.transfers = stream.str();
 
-	    bool transfers_found = false;
-	    for (const auto& td : transfers)
-	    {
-	        if (!transfers_found)
-	        {
-	          transfers_found = true;
-	        }
-	        web_wallet::rpc::transfer_details rpc_transfers;
-	        rpc_transfers.amount       = td.amount();
-	        rpc_transfers.spent        = td.m_spent;
-	        rpc_transfers.global_index = td.m_global_output_index;
-	        rpc_transfers.tx_hash      = boost::lexical_cast<std::string>(cryptonote::get_transaction_hash(td.m_tx));
-	        res.transfers.push_back(rpc_transfers);
-	    }
+	    // bool transfers_found = false;
+	    // for (const auto& td : transfers)
+	    // {
+	    //     if (!transfers_found)
+	    //     {
+	    //       transfers_found = true;
+	    //     }
+	    //     web_wallet::rpc::transfer_details rpc_transfers;
+	    //     rpc_transfers.amount       = td.amount();
+	    //     rpc_transfers.spent        = td.m_spent;
+	    //     rpc_transfers.global_index = td.m_global_output_index;
+	    //     rpc_transfers.tx_hash      = boost::lexical_cast<std::string>(cryptonote::get_transaction_hash(td.m_tx));
+	    //     res.transfers.push_back(rpc_transfers);
+	    // }
       res.balance = m_wallet->balance();
       res.unlocked_balance = m_wallet->unlocked_balance();
       res.account_create_time = m_wallet->get_account().get_createtime();
