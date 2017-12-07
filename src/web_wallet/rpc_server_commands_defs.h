@@ -25,10 +25,11 @@ namespace rpc
     {
       std::string address;
       std::string key;
-
+	  uint64_t 	 balance;
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(address)
         KV_SERIALIZE(key)
+		KV_SERIALIZE(balance)
       END_KV_SERIALIZE_MAP()
     };
   };
@@ -57,9 +58,12 @@ namespace rpc
 
   struct COMMAND_RPC_GET_BALANCE
   {
+
     struct request
     {
+      std::string seed;
       BEGIN_KV_SERIALIZE_MAP()
+		    KV_SERIALIZE(seed)
       END_KV_SERIALIZE_MAP()
     };
 

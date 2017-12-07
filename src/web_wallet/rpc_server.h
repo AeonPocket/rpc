@@ -20,8 +20,7 @@ namespace web_wallet
 
     const static command_line::arg_descriptor<std::string> arg_rpc_bind_port;
     const static command_line::arg_descriptor<std::string> arg_rpc_bind_ip;
-
-
+	bool set_daemon_address(std::string &daemon_address);
     static void init_options(boost::program_options::options_description& desc);
     bool init(const boost::program_options::variables_map& vm);
     bool run();
@@ -33,7 +32,7 @@ namespace web_wallet
       BEGIN_JSON_RPC_MAP("/json_rpc")
         MAP_JON_RPC_WE("set_wallet",         on_set_wallet,         rpc::COMMAND_RPC_SET_WALLET)
         MAP_JON_RPC_WE("create_wallet",         on_create_wallet,         rpc::COMMAND_RPC_CREATE_WALLET)
-      //  MAP_JON_RPC_WE("getbalance",         on_getbalance,         rpc::COMMAND_RPC_GET_BALANCE)
+        MAP_JON_RPC_WE("getbalance",         on_getbalance,         rpc::COMMAND_RPC_GET_BALANCE)
       //  MAP_JON_RPC_WE("getaddress",         on_getaddress,         rpc::COMMAND_RPC_GET_ADDRESS)
       //  MAP_JON_RPC_WE("transfer",           on_transfer,           rpc::COMMAND_RPC_TRANSFER)
       //  MAP_JON_RPC_WE("transfer_split",     on_transfer_split,     rpc::COMMAND_RPC_TRANSFER_SPLIT)
@@ -48,8 +47,8 @@ namespace web_wallet
       //json_rpc
       bool on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er, connection_context& cntx);
 	  bool on_create_wallet(const rpc::COMMAND_RPC_CREATE_WALLET::request & req, rpc::COMMAND_RPC_CREATE_WALLET::response & res, epee::json_rpc::error & er, rpc_server::connection_context & cntx);
-     /* bool on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, connection_context& cntx);
-      bool on_getaddress(const rpc::COMMAND_RPC_GET_ADDRESS::request& req, rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, connection_context& cntx);
+      bool on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, connection_context& cntx);
+      /*bool on_getaddress(const rpc::COMMAND_RPC_GET_ADDRESS::request& req, rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool validate_transfer(const std::list<rpc::transfer_destination> destinations, const std::string payment_id, std::vector<cryptonote::tx_destination_entry>& dsts, std::vector<uint8_t>& extra, epee::json_rpc::error& er);
       bool on_transfer(const rpc::COMMAND_RPC_TRANSFER::request& req, rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool on_transfer_split(const rpc::COMMAND_RPC_TRANSFER_SPLIT::request& req, rpc::COMMAND_RPC_TRANSFER_SPLIT::response& res, epee::json_rpc::error& er, connection_context& cntx);
@@ -66,5 +65,6 @@ namespace web_wallet
       // tools::wallet2& m_wallet;
       std::string m_port;
       std::string m_bind_ip;
+	  std::string m_daemon_address;
   };
 }

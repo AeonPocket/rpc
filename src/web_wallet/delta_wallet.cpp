@@ -1125,6 +1125,7 @@ int main(int argc, char* argv[])
 
   web_wallet::rpc_server wrpc;
   r = wrpc.init(vm);
+  wrpc.set_daemon_address(daemon_address);
   CHECK_AND_ASSERT_MES(r, 1, "Failed to initialize wallet rpc server");
 
   tools::signal_handler::install([&wrpc] {

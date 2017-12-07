@@ -47,7 +47,7 @@ using namespace epee;
 namespace web_wallet
 {
   //-----------------------------------------------------------------------------------
-  const command_line::arg_descriptor<std::string> rpc_server::arg_rpc_bind_port = {"rpc-bind-port", "Starts wallet as rpc server for wallet operations, sets bind port for server", "11191", true};
+  const command_line::arg_descriptor<std::string> rpc_server::arg_rpc_bind_port = {"rpc-bind-port", "Starts wallet as rpc server for wallet operations, sets bind port for server", "11191"};
   const command_line::arg_descriptor<std::string> rpc_server::arg_rpc_bind_ip = {"rpc-bind-ip", "Specify ip to bind rpc server", "127.0.0.1"};
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
   boost::filesystem::path TEMP_DIR("C:\\tmp");
@@ -63,19 +63,19 @@ namespace web_wallet
   rpc_server::rpc_server()
   {}
   //------------------------------------------------------------------------------------------------------------------------------
-  
   // setterwallet
-  
+ 
   bool rpc_server::run()
   {
     //DO NOT START THIS SERVER IN MORE THEN 1 THREADS WITHOUT REFACTORING
     return epee::http_server_impl_base<rpc_server, connection_context>::run(1, true);
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::handle_command_line(const boost::program_options::variables_map& vm)
+  bool rpc_server::handle_command_line(const boost::program_options::variables_map& vm )
   {
     m_bind_ip = command_line::get_arg(vm, arg_rpc_bind_ip);
     m_port = command_line::get_arg(vm, arg_rpc_bind_port);
+
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
@@ -86,8 +86,11 @@ namespace web_wallet
     CHECK_AND_ASSERT_MES(r, false, "Failed to process command line in core_rpc_server");
     return epee::http_server_impl_base<rpc_server, connection_context>::init(m_port, m_bind_ip);
   }
-  
-  
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool rpc_server::set_daemon_address(std::string &daemon_address) {
+	  m_daemon_address = daemon_address;
+	  return true;
+  }
   //------------------------------------------------------------------------------------------------------------------------------
   bool rpc_server::on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
   {
@@ -96,6 +99,7 @@ namespace web_wallet
       crypto::secret_key recovery_param;
       crypto::ElectrumWords::words_to_bytes(req.seed, recovery_param);
       tools::wallet2* m_wallet = new tools::wallet2();
+	
 	  boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
       m_wallet->generate(l_path.string(), "y", recovery_param, true, false);
       m_wallet->load(l_path.string(), "y");
@@ -134,6 +138,7 @@ namespace web_wallet
 	  res.seed = string_tools::trim(res.seed);
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
+	 
     }
     catch (std::exception& e)
     {
@@ -143,22 +148,36 @@ namespace web_wallet
     }
     return true;
   }
-  ////------------------------------------------------------------------------------------------------------------------------------
-  //bool rpc_server::on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, connection_context& cntx)
-  //{
-  //  try
-  //  {
-  //    res.balance = m_wallet.balance();
-  //    res.unlocked_balance = m_wallet.unlocked_balance();
-  //  }
-  //  catch (std::exception& e)
-  //  {
-  //    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-  //    er.message = e.what();
-  //    return false;
-  //  }
-  //  return true;
-  //}
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool rpc_server::on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, connection_context& cntx)
+  {
+    try
+    {
+      crypto::secret_key recovery_param;
+      crypto::ElectrumWords::words_to_bytes(req.seed, recovery_param);
+      tools::wallet2* m_wallet = new tools::wallet2();
+	
+	  boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
+	  m_wallet->init(m_daemon_address);
+      m_wallet->generate(l_path.string(), "y", recovery_param, true, false);
+      m_wallet->load(l_path.string(), "y");
+      remove(l_path.string().c_str());
+	  std::string l_path_address = l_path.string();
+      remove(l_path_address.append(".address.txt").c_str());
+	  std::string l_path_keys = l_path.string();
+      remove(l_path_keys.append(".keys").c_str());
+	  m_wallet->refresh();
+      res.balance = m_wallet->balance();
+      res.unlocked_balance = m_wallet->unlocked_balance();
+    }
+    catch (std::exception& e)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = e.what();
+      return false;
+    }
+    return true;
+  }
   ////------------------------------------------------------------------------------------------------------------------------------
   //bool rpc_server::on_getaddress(const rpc::COMMAND_RPC_GET_ADDRESS::request& req, rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, connection_context& cntx)
   //{
