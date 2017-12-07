@@ -156,19 +156,39 @@ namespace web_wallet
       crypto::secret_key recovery_param;
       crypto::ElectrumWords::words_to_bytes(req.seed, recovery_param);
       tools::wallet2* m_wallet = new tools::wallet2();
-	
+
 	  boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
 	  m_wallet->init(m_daemon_address);
       m_wallet->generate(l_path.string(), "y", recovery_param, true, false);
       m_wallet->load(l_path.string(), "y");
-      remove(l_path.string().c_str());
+	  remove(l_path.string().c_str());
 	  std::string l_path_address = l_path.string();
       remove(l_path_address.append(".address.txt").c_str());
 	  std::string l_path_keys = l_path.string();
       remove(l_path_keys.append(".keys").c_str());
-	  m_wallet->refresh();
+
+	    tools::wallet2::transfer_container transfers;
+	    m_wallet->get_transfers(transfers);
+
+	    bool transfers_found = false;
+	    for (const auto& td : transfers)
+	    {
+	        if (!transfers_found)
+	        {
+	          transfers_found = true;
+	        }
+	        web_wallet::rpc::transfer_details rpc_transfers;
+	        rpc_transfers.amount       = td.amount();
+	        rpc_transfers.spent        = td.m_spent;
+	        rpc_transfers.global_index = td.m_global_output_index;
+	        rpc_transfers.tx_hash      = boost::lexical_cast<std::string>(cryptonote::get_transaction_hash(td.m_tx));
+	        res.transfers.push_back(rpc_transfers);
+	    }
       res.balance = m_wallet->balance();
       res.unlocked_balance = m_wallet->unlocked_balance();
+	  res.account_create_time = m_wallet->get_account().get_createtime();
+	  res.local_bc_height = m_wallet->get_blockchain_current_height();
+	  res.public_address = m_wallet->get_account().get_public_address_str();
     }
     catch (std::exception& e)
     {

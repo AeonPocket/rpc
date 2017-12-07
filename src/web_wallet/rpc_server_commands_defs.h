@@ -3,6 +3,8 @@
 #include "cryptonote_core/cryptonote_basic.h"
 #include "crypto/hash.h"
 #include "wallet/wallet_rpc_server_error_codes.h"
+#include "cryptonote_core\account.h"
+#include "wallet\wallet2.h"
 namespace web_wallet
 {
 namespace rpc
@@ -56,6 +58,22 @@ namespace rpc
     };
   };
 
+struct transfer_details
+{
+	uint64_t amount;
+	bool spent;
+	uint64_t global_index;
+	std::string tx_hash;
+
+	BEGIN_KV_SERIALIZE_MAP()
+		KV_SERIALIZE(amount)
+		KV_SERIALIZE(spent)
+		KV_SERIALIZE(global_index)
+		KV_SERIALIZE(tx_hash)
+	END_KV_SERIALIZE_MAP()
+};
+
+
   struct COMMAND_RPC_GET_BALANCE
   {
 
@@ -71,10 +89,20 @@ namespace rpc
     {
       uint64_t 	 balance;
       uint64_t 	 unlocked_balance;
+	  uint64_t account_create_time;
+	  //std::list <tools::wallet2::transfer_container> transfers;
+	  uint64_t local_bc_height;
+	  //std::list<tools::wallet2::payment_details> payments;
+	  std::string public_address;
+	  std::list<transfer_details> transfers;
 
-      BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(balance)
-        KV_SERIALIZE(unlocked_balance)
+	  BEGIN_KV_SERIALIZE_MAP()
+		  KV_SERIALIZE(balance)
+		  KV_SERIALIZE(unlocked_balance)
+		  KV_SERIALIZE(account_create_time)
+		  KV_SERIALIZE(local_bc_height)
+		  KV_SERIALIZE(transfers)
+		  KV_SERIALIZE(public_address)
       END_KV_SERIALIZE_MAP()
     };
   };
@@ -241,20 +269,6 @@ namespace rpc
     };
   };
   
-  struct transfer_details
-  {
-    uint64_t amount;
-    bool spent;
-    uint64_t global_index;
-    std::string tx_hash;
-
-    BEGIN_KV_SERIALIZE_MAP()
-      KV_SERIALIZE(amount)
-      KV_SERIALIZE(spent)
-      KV_SERIALIZE(global_index)
-      KV_SERIALIZE(tx_hash)
-    END_KV_SERIALIZE_MAP()
-  };
 
   struct COMMAND_RPC_INCOMING_TRANSFERS
   {
