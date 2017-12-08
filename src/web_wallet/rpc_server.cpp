@@ -122,6 +122,7 @@ namespace web_wallet
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
       res.spend_key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_spend_secret_key);
+	  delete m_wallet;
 	  }
     catch (std::exception& e)
     {
@@ -137,7 +138,7 @@ namespace web_wallet
     try
     {
       tools::wallet2* m_wallet = new tools::wallet2();
-	    boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
+	  boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
       std::string l_path_address = l_path.string();
       std::string l_path_keys = l_path.string();
 
@@ -153,6 +154,7 @@ namespace web_wallet
       res.seed = string_tools::trim(res.seed);
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
+	  delete m_wallet;
     }
     catch (std::exception& e)
     {
@@ -197,6 +199,7 @@ namespace web_wallet
       res.account_create_time = m_wallet->get_account().get_createtime();
       res.local_bc_height = m_wallet->get_blockchain_current_height();
       res.public_address = m_wallet->get_account().get_public_address_str();
+	  delete m_wallet;
     }
     catch (std::exception& e)
     {
