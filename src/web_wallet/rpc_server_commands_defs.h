@@ -123,6 +123,44 @@ namespace rpc
     };
   };
 
+  struct COMMAND_RPC_REFRESH
+  {
+
+    struct request
+    {
+      std::string seed;
+      uint64_t account_create_time;
+      uint64_t local_bc_height;
+      std::string transfers;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(seed)
+        KV_SERIALIZE(account_create_time)
+        KV_SERIALIZE(local_bc_height)
+        KV_SERIALIZE(transfers)
+      END_KV_SERIALIZE_MAP()
+    };
+
+    struct response
+    {
+      uint64_t balance;
+      uint64_t unlocked_balance;
+      uint64_t account_create_time;
+      uint64_t local_bc_height;
+      std::string public_address;
+      std::string transfers;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(balance)
+        KV_SERIALIZE(unlocked_balance)
+        KV_SERIALIZE(account_create_time)
+        KV_SERIALIZE(local_bc_height)
+        KV_SERIALIZE(transfers)
+        KV_SERIALIZE(public_address)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
     struct COMMAND_RPC_GET_ADDRESS
   {
     struct request

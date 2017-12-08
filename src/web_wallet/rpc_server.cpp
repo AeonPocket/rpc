@@ -44,6 +44,7 @@ using namespace epee;
 #include "crypto/hash.h"
 #include "crypto/electrum-words.h"
 #include "wallet/wallet2.h"
+#include "rpc/core_rpc_server_commands_defs.h"
 
 namespace web_wallet
 {
@@ -160,10 +161,15 @@ namespace web_wallet
       std::ostringstream stream;
       boost::archive::text_oarchive oa{stream};
       oa<<transfers;
+
+      cryptonote::COMMAND_RPC_GET_HEIGHT::request request;
+      cryptonote::COMMAND_RPC_GET_HEIGHT::response response = boost::value_initialized<cryptonote::COMMAND_RPC_GET_HEIGHT::response>();
+      bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/getheight", request, response, m_http_client);
+
       res.transfers = stream.str();
       res.account_create_time = m_wallet->get_account().get_createtime();
-      res.local_bc_height = m_wallet->get_blockchain_current_height();
-	  delete m_wallet;
+      res.local_bc_height = response.height;
+	    delete m_wallet;
     }
     catch (std::exception& e)
     {
@@ -180,6 +186,35 @@ namespace web_wallet
     {
       tools::wallet2* m_wallet = new tools::wallet2();
       create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
+
+	    tools::wallet2::transfer_container transfers;
+	    m_wallet->get_transfers(transfers);
+      std::ostringstream stream;
+      boost::archive::text_oarchive oa{stream};
+      oa<<transfers;
+      res.transfers = stream.str();
+      res.balance = m_wallet->balance();
+      res.unlocked_balance = m_wallet->unlocked_balance();
+      res.account_create_time = m_wallet->get_account().get_createtime();
+      res.local_bc_height = m_wallet->get_blockchain_current_height();
+      res.public_address = m_wallet->get_account().get_public_address_str();
+	  delete m_wallet;
+    }
+    catch (std::exception& e)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = e.what();
+      return false;
+    }
+    return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool rpc_server::on_refresh(const rpc::COMMAND_RPC_REFRESH::request& req, rpc::COMMAND_RPC_REFRESH::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
+  {
+    try
+    {
+      tools::wallet2* m_wallet = new tools::wallet2();
+      create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
       m_wallet->refresh_from_local_bc();
 
 	    tools::wallet2::transfer_container transfers;
@@ -188,21 +223,6 @@ namespace web_wallet
       boost::archive::text_oarchive oa{stream};
       oa<<transfers;
       res.transfers = stream.str();
-
-	    // bool transfers_found = false;
-	    // for (const auto& td : transfers)
-	    // {
-	    //     if (!transfers_found)
-	    //     {
-	    //       transfers_found = true;
-	    //     }
-	    //     web_wallet::rpc::transfer_details rpc_transfers;
-	    //     rpc_transfers.amount       = td.amount();
-	    //     rpc_transfers.spent        = td.m_spent;
-	    //     rpc_transfers.global_index = td.m_global_output_index;
-	    //     rpc_transfers.tx_hash      = boost::lexical_cast<std::string>(cryptonote::get_transaction_hash(td.m_tx));
-	    //     res.transfers.push_back(rpc_transfers);
-	    // }
       res.balance = m_wallet->balance();
       res.unlocked_balance = m_wallet->unlocked_balance();
       res.account_create_time = m_wallet->get_account().get_createtime();
