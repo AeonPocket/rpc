@@ -70,11 +70,17 @@ namespace rpc
       std::string seed;
 	    std::string address;
 	    std::string key;
+      uint64_t account_create_time;
+      uint64_t local_bc_height;
+      std::string transfers;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(seed)
         KV_SERIALIZE(address)
         KV_SERIALIZE(key)
+        KV_SERIALIZE(account_create_time)
+        KV_SERIALIZE(local_bc_height)
+        KV_SERIALIZE(transfers)
       END_KV_SERIALIZE_MAP()
     };
   };

@@ -69,7 +69,7 @@ namespace web_wallet
   bool rpc_server::run()
   {
     //DO NOT START THIS SERVER IN MORE THEN 1 THREADS WITHOUT REFACTORING
-    log_space::log_singletone::get_set_log_detalisation_level(true, 1);
+    // log_space::log_singletone::get_set_log_detalisation_level(true, 1);
     return epee::http_server_impl_base<rpc_server, connection_context>::run(1, true);
   }
   //------------------------------------------------------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ namespace web_wallet
     std::string l_path_keys = l_path.string();
 
     m_wallet->init(m_daemon_address);
-    m_wallet->generate(l_path.string(), "y", recovery_param, false, false);
+    m_wallet->generate(l_path.string(), "y", recovery_param, true, false);
     m_wallet->load(l_path.string(), "y");
     m_wallet->load(account_create_time, local_bc_height, transfers);
     remove(l_path.string().c_str());
@@ -122,7 +122,7 @@ namespace web_wallet
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
       res.spend_key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_spend_secret_key);
-	  delete m_wallet;
+	    delete m_wallet;
 	  }
     catch (std::exception& e)
     {
@@ -138,7 +138,7 @@ namespace web_wallet
     try
     {
       tools::wallet2* m_wallet = new tools::wallet2();
-	  boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
+	    boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
       std::string l_path_address = l_path.string();
       std::string l_path_keys = l_path.string();
 
@@ -154,6 +154,15 @@ namespace web_wallet
       res.seed = string_tools::trim(res.seed);
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
+
+      tools::wallet2::transfer_container transfers;
+	    m_wallet->get_transfers(transfers);
+      std::ostringstream stream;
+      boost::archive::text_oarchive oa{stream};
+      oa<<transfers;
+      res.transfers = stream.str();
+      res.account_create_time = m_wallet->get_account().get_createtime();
+      res.local_bc_height = m_wallet->get_blockchain_current_height();
 	  delete m_wallet;
     }
     catch (std::exception& e)
@@ -171,7 +180,7 @@ namespace web_wallet
     {
       tools::wallet2* m_wallet = new tools::wallet2();
       create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
-      // m_wallet->refresh();
+      m_wallet->refresh_from_local_bc();
 
 	    tools::wallet2::transfer_container transfers;
 	    m_wallet->get_transfers(transfers);

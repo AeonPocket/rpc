@@ -157,6 +157,7 @@ namespace tools
     void refresh(uint64_t start_height, size_t & blocks_fetched);
     void refresh(uint64_t start_height, size_t & blocks_fetched, bool& received_money);
     bool refresh(size_t & blocks_fetched, bool& received_money, bool& ok);
+    void refresh_from_local_bc();
 
     uint64_t balance();
     uint64_t unlocked_balance();

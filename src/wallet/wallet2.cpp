@@ -363,6 +363,41 @@ void wallet2::refresh(uint64_t start_height, size_t & blocks_fetched, bool& rece
   LOG_PRINT_L1("Refresh done, blocks received: " << blocks_fetched << ", balance: " << print_money(balance()) << ", unlocked: " << print_money(unlocked_balance()));
 }
 //----------------------------------------------------------------------------------------------------
+void wallet2::refresh_from_local_bc()
+{
+  size_t blocks_fetched = 0;
+  size_t added_blocks = 0;
+  size_t try_count = 0;
+  m_blockchain.reserve(m_local_bc_height);
+
+  while(m_run.load(std::memory_order_relaxed))
+  {
+    try
+    {
+      pull_blocks(m_local_bc_height, added_blocks);
+      blocks_fetched += added_blocks;
+      if(!added_blocks)
+        break;
+    }
+    catch (const std::exception&)
+    {
+      blocks_fetched += added_blocks;
+      if(try_count < 3)
+      {
+        LOG_PRINT_L1("Another try pull_blocks (try_count=" << try_count << ")...");
+        ++try_count;
+      }
+      else
+      {
+        LOG_ERROR("pull_blocks failed, try_count=" << try_count);
+        throw;
+      }
+    }
+  }
+
+  LOG_PRINT_L1("Refresh done, blocks received: " << blocks_fetched << ", balance: " << print_money(balance()) << ", unlocked: " << print_money(unlocked_balance()));
+}
+//----------------------------------------------------------------------------------------------------
 bool wallet2::refresh(size_t & blocks_fetched, bool& received_money, bool& ok)
 {
   try
