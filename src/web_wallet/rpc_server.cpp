@@ -153,8 +153,6 @@ namespace web_wallet
       crypto::ElectrumWords::bytes_to_words(recovery_param, res.seed);
 	    
       res.seed = string_tools::trim(res.seed);
-      res.address = m_wallet->get_account().get_public_address_str();
-      res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
 
       tools::wallet2::transfer_container transfers;
 	    m_wallet->get_transfers(transfers);
@@ -197,8 +195,7 @@ namespace web_wallet
       res.unlocked_balance = m_wallet->unlocked_balance();
       res.account_create_time = m_wallet->get_account().get_createtime();
       res.local_bc_height = m_wallet->get_blockchain_current_height();
-      res.public_address = m_wallet->get_account().get_public_address_str();
-	  delete m_wallet;
+	    delete m_wallet;
     }
     catch (std::exception& e)
     {
@@ -227,8 +224,7 @@ namespace web_wallet
       res.unlocked_balance = m_wallet->unlocked_balance();
       res.account_create_time = m_wallet->get_account().get_createtime();
       res.local_bc_height = m_wallet->get_blockchain_current_height();
-      res.public_address = m_wallet->get_account().get_public_address_str();
-	  delete m_wallet;
+	    delete m_wallet;
     }
     catch (std::exception& e)
     {
