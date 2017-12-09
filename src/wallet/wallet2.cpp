@@ -394,7 +394,7 @@ void wallet2::refresh_from_local_bc()
       }
     }
   }
-
+  m_blockchain.resize(m_local_bc_height + blocks_fetched);
   LOG_PRINT_L1("Refresh done, blocks received: " << blocks_fetched << ", balance: " << print_money(balance()) << ", unlocked: " << print_money(unlocked_balance()));
 }
 //----------------------------------------------------------------------------------------------------
