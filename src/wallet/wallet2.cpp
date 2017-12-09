@@ -368,7 +368,6 @@ void wallet2::refresh_from_local_bc()
   size_t blocks_fetched = 0;
   size_t added_blocks = 0;
   size_t try_count = 0;
-  m_blockchain.reserve(m_local_bc_height);
 
   while(m_run.load(std::memory_order_relaxed))
   {
@@ -624,6 +623,7 @@ void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::
   ss.str(transfers);
   boost::archive::text_iarchive ia{ss};
   ia >> m_transfers;
+  m_blockchain.resize(m_local_bc_height);
 };
 //----------------------------------------------------------------------------------------------------
 void wallet2::store()

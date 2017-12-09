@@ -255,100 +255,105 @@ namespace web_wallet
   //}
 
   ////------------------------------------------------------------------------------------------------------------------------------
-  //bool rpc_server::validate_transfer(const std::list<rpc::transfer_destination> destinations, const std::string payment_id, std::vector<cryptonote::tx_destination_entry>& dsts, std::vector<uint8_t>& extra, epee::json_rpc::error& er)
-  //{
-  //  for (auto it = destinations.begin(); it != destinations.end(); it++)
-  //  {
-  //    cryptonote::tx_destination_entry de;
-  //    if(!get_account_address_from_str(de.addr, it->address))
-  //    {
-  //      er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
-  //      er.message = std::string("WALLET_RPC_ERROR_CODE_WRONG_ADDRESS: ") + it->address;
-  //      return false;
-  //    }
-  //    de.amount = it->amount;
-  //    dsts.push_back(de);
-  //  }
+  bool rpc_server::validate_transfer(const std::list<rpc::transfer_destination> destinations, const std::string payment_id, std::vector<cryptonote::tx_destination_entry>& dsts, std::vector<uint8_t>& extra, epee::json_rpc::error& er)
+  {
+   for (auto it = destinations.begin(); it != destinations.end(); it++)
+   {
+     cryptonote::tx_destination_entry de;
+     if(!get_account_address_from_str(de.addr, it->address))
+     {
+       er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
+       er.message = std::string("WALLET_RPC_ERROR_CODE_WRONG_ADDRESS: ") + it->address;
+       return false;
+     }
+     de.amount = it->amount;
+     dsts.push_back(de);
+   }
 
-  //  if (!payment_id.empty())
-  //  {
+   if (!payment_id.empty())
+   {
 
-  //    /* Just to clarify */
-  //    const std::string& payment_id_str = payment_id;
+     /* Just to clarify */
+     const std::string& payment_id_str = payment_id;
 
-  //    crypto::hash payment_id;
-  //    /* Parse payment ID */
-  //    if (!wallet2::parse_payment_id(payment_id_str, payment_id)) {
-  //      er.code = WALLET_RPC_ERROR_CODE_WRONG_PAYMENT_ID;
-  //      er.message = "Payment id has invalid format: \"" + payment_id_str + "\", expected 64-character string";
-  //      return false;
-  //    }
+     crypto::hash payment_id;
+     /* Parse payment ID */
+     if (!tools::wallet2::parse_payment_id(payment_id_str, payment_id)) {
+       er.code = WALLET_RPC_ERROR_CODE_WRONG_PAYMENT_ID;
+       er.message = "Payment id has invalid format: \"" + payment_id_str + "\", expected 64-character string";
+       return false;
+     }
 
-  //    std::string extra_nonce;
-  //    cryptonote::set_payment_id_to_tx_extra_nonce(extra_nonce, payment_id);
-  //    
-  //    /* Append Payment ID data into extra */
-  //    if (!cryptonote::add_extra_nonce_to_tx_extra(extra, extra_nonce)) {
-  //      er.code = WALLET_RPC_ERROR_CODE_WRONG_PAYMENT_ID;
-  //      er.message = "Something went wront with payment_id. Please check its format: \"" + payment_id_str + "\", expected 64-character string";
-  //      return false;
-  //    }
+     std::string extra_nonce;
+     cryptonote::set_payment_id_to_tx_extra_nonce(extra_nonce, payment_id);
+     
+     /* Append Payment ID data into extra */
+     if (!cryptonote::add_extra_nonce_to_tx_extra(extra, extra_nonce)) {
+       er.code = WALLET_RPC_ERROR_CODE_WRONG_PAYMENT_ID;
+       er.message = "Something went wront with payment_id. Please check its format: \"" + payment_id_str + "\", expected 64-character string";
+       return false;
+     }
 
-  //  }
-  //  return true;
-  //}
+   }
+   return true;
+  }
 
   ////------------------------------------------------------------------------------------------------------------------------------
-  //bool rpc_server::on_transfer(const rpc::COMMAND_RPC_TRANSFER::request& req, rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, connection_context& cntx)
-  //{
+  bool rpc_server::on_transfer(const rpc::COMMAND_RPC_TRANSFER::request& req, rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, connection_context& cntx)
+  {
 
-  //  std::vector<cryptonote::tx_destination_entry> dsts;
-  //  std::vector<uint8_t> extra;
+    tools::wallet2* m_wallet = new tools::wallet2();
+    create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
+    m_wallet->refresh_from_local_bc();
 
-  //  // validate the transfer requested and populate dsts & extra
-  //  if (!validate_transfer(req.destinations, req.payment_id, dsts, extra, er))
-  //  {
-  //    return false;
-  //  }
+   std::vector<cryptonote::tx_destination_entry> dsts;
+   std::vector<uint8_t> extra;
 
-  //  try
-  //  {
-  //    std::vector<wallet2::pending_tx> ptx_vector = m_wallet.create_transactions(dsts, req.mixin, req.unlock_time, req.fee, extra);
+   // validate the transfer requested and populate dsts & extra
+   if (!validate_transfer(req.destinations, req.payment_id, dsts, extra, er))
+   {
+     return false;
+   }
 
-  //    // reject proposed transactions if there are more than one.  see on_transfer_split below.
-  //    if (ptx_vector.size() != 1)
-  //    {
-  //      er.code = WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR;
-  //      er.message = "Transaction would be too large.  try /transfer_split.";
-  //      return false;
-  //    }
+   try
+   {
+     std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions(dsts, req.mixin, req.unlock_time, req.fee, extra);
 
-  //    m_wallet.commit_tx(ptx_vector);
+     // reject proposed transactions if there are more than one.  see on_transfer_split below.
+     if (ptx_vector.size() != 1)
+     {
+       er.code = WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR;
+       er.message = "Transaction would be too large.  try /transfer_split.";
+       return false;
+     }
 
-  //    // populate response with tx hash
-  //    res.tx_hash = boost::lexical_cast<std::string>(cryptonote::get_transaction_hash(ptx_vector.back().tx));
-  //    return true;
-  //  }
-  //  catch (const tools::error::daemon_busy& e)
-  //  {
-  //    er.code = WALLET_RPC_ERROR_CODE_DAEMON_IS_BUSY;
-  //    er.message = e.what();
-  //    return false;
-  //  }
-  //  catch (const std::exception& e)
-  //  {
-  //    er.code = WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR;
-  //    er.message = e.what();
-  //    return false;
-  //  }
-  //  catch (...)
-  //  {
-  //    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-  //    er.message = "WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR";
-  //    return false;
-  //  }
-  //  return true;
-  //}
+     m_wallet->commit_tx(ptx_vector);
+
+     // populate response with tx hash
+     res.tx_hash = boost::lexical_cast<std::string>(cryptonote::get_transaction_hash(ptx_vector.back().tx));
+     return true;
+   }
+   catch (const tools::error::daemon_busy& e)
+   {
+     er.code = WALLET_RPC_ERROR_CODE_DAEMON_IS_BUSY;
+     er.message = e.what();
+     return false;
+   }
+   catch (const std::exception& e)
+   {
+     er.code = WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR;
+     er.message = e.what();
+     return false;
+   }
+   catch (...)
+   {
+     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+     er.message = "WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR";
+     return false;
+   }
+	 delete m_wallet;
+   return true;
+  }
   ////------------------------------------------------------------------------------------------------------------------------------
   //bool rpc_server::on_transfer_split(const rpc::COMMAND_RPC_TRANSFER_SPLIT::request& req, rpc::COMMAND_RPC_TRANSFER_SPLIT::response& res, epee::json_rpc::error& er, connection_context& cntx)
   //{
@@ -494,56 +499,61 @@ namespace web_wallet
   //  return true;
   //}
   ////------------------------------------------------------------------------------------------------------------------------------
-  //bool rpc_server::on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er, connection_context& cntx)
-  //{
-  //  if(req.transfer_type.compare("all") != 0 && req.transfer_type.compare("available") != 0 && req.transfer_type.compare("unavailable") != 0)
-  //  {
-  //    er.code = WALLET_RPC_ERROR_CODE_TRANSFER_TYPE;
-  //    er.message = "Transfer type must be one of: all, available, or unavailable";
-  //    return false;
-  //  }
+  bool rpc_server::on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er, connection_context& cntx)
+  {
+    tools::wallet2* m_wallet = new tools::wallet2();
+    create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
 
-  //  bool filter = false;
-  //  bool available = false;
-  //  if (req.transfer_type.compare("available") == 0)
-  //  {
-  //    filter = true;
-  //    available = true;
-  //  }
-  //  else if (req.transfer_type.compare("unavailable") == 0)
-  //  {
-  //    filter = true;
-  //    available = false;
-  //  }
+   if(req.transfer_type.compare("all") != 0 && req.transfer_type.compare("available") != 0 && req.transfer_type.compare("unavailable") != 0)
+   {
+     er.code = WALLET_RPC_ERROR_CODE_TRANSFER_TYPE;
+     er.message = "Transfer type must be one of: all, available, or unavailable";
+     return false;
+   }
 
-  //  wallet2::transfer_container transfers;
-  //  m_wallet.get_transfers(transfers);
+   bool filter = false;
+   bool available = false;
+   if (req.transfer_type.compare("available") == 0)
+   {
+     filter = true;
+     available = true;
+   }
+   else if (req.transfer_type.compare("unavailable") == 0)
+   {
+     filter = true;
+     available = false;
+   }
 
-  //  bool transfers_found = false;
-  //  for (const auto& td : transfers)
-  //  {
-  //    if (!filter || available != td.m_spent)
-  //    {
-  //      if (!transfers_found)
-  //      {
-  //        transfers_found = true;
-  //      }
-  //      rpc_server::transfer_details rpc_transfers;
-  //      rpc_transfers.amount       = td.amount();
-  //      rpc_transfers.spent        = td.m_spent;
-  //      rpc_transfers.global_index = td.m_global_output_index;
-  //      rpc_transfers.tx_hash      = boost::lexical_cast<std::string>(cryptonote::get_transaction_hash(td.m_tx));
-  //      res.transfers.push_back(rpc_transfers);
-  //    }
-  //  }
+   tools::wallet2::transfer_container transfers;
+   m_wallet->get_transfers(transfers);
 
-  //  if (!transfers_found)
-  //  {
-  //    return false;
-  //  }
-  //
-  //  return true;
-  //}
+   bool transfers_found = false;
+   for (const auto& td : transfers)
+   {
+     if (!filter || available != td.m_spent)
+     {
+       if (!transfers_found)
+       {
+         transfers_found = true;
+       }
+       web_wallet::rpc::transfer_details rpc_transfers;
+       rpc_transfers.amount       = td.amount();
+       rpc_transfers.spent        = td.m_spent;
+       rpc_transfers.global_index = td.m_global_output_index;
+       rpc_transfers.tx_hash      = boost::lexical_cast<std::string>(cryptonote::get_transaction_hash(td.m_tx));
+       res.transfers.push_back(rpc_transfers);
+     }
+   }
+
+	 delete m_wallet;
+
+   if (!transfers_found)
+   {
+     return false;
+   }
+   
+   return true;
+  }
   ////------------------------------------------------------------------------------------------------------------------------------
   //bool rpc_server::on_query_key(const rpc::COMMAND_RPC_QUERY_KEY::request& req, rpc::COMMAND_RPC_QUERY_KEY::response& res, epee::json_rpc::error& er, connection_context& cntx)
   //{

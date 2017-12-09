@@ -198,6 +198,10 @@ namespace rpc
       uint64_t mixin;
       uint64_t unlock_time;
       std::string payment_id;
+      std::string seed;
+      uint64_t account_create_time;
+      uint64_t local_bc_height;
+      std::string transfers;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(destinations)
@@ -205,6 +209,10 @@ namespace rpc
         KV_SERIALIZE(mixin)
         KV_SERIALIZE(unlock_time)
         KV_SERIALIZE(payment_id)
+        KV_SERIALIZE(seed)
+        KV_SERIALIZE(account_create_time)
+        KV_SERIALIZE(local_bc_height)
+        KV_SERIALIZE(transfers)
       END_KV_SERIALIZE_MAP()
     };
 
@@ -329,9 +337,17 @@ namespace rpc
     struct request
     {
       std::string transfer_type;
+      std::string seed;
+      uint64_t account_create_time;
+      uint64_t local_bc_height;
+      std::string transfers;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(transfer_type)
+        KV_SERIALIZE(seed)
+        KV_SERIALIZE(account_create_time)
+        KV_SERIALIZE(local_bc_height)
+        KV_SERIALIZE(transfers)
       END_KV_SERIALIZE_MAP()
     };
 
