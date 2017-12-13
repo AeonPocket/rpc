@@ -153,6 +153,25 @@ namespace rpc
     };
   };
 
+  struct COMMAND_BC_HEIGHT
+  {
+
+    struct request
+    {
+      BEGIN_KV_SERIALIZE_MAP()
+      END_KV_SERIALIZE_MAP()
+    };
+
+    struct response
+    {
+      uint64_t height;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(height)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
   struct COMMAND_RPC_GET_ADDRESS
   {
     struct request

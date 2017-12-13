@@ -41,6 +41,7 @@ namespace web_wallet
       //  MAP_JON_RPC_WE("get_payments",       on_get_payments,       rpc::COMMAND_RPC_GET_PAYMENTS)
       //  MAP_JON_RPC_WE("get_bulk_payments",  on_get_bulk_payments,  rpc::COMMAND_RPC_GET_BULK_PAYMENTS)
        MAP_JON_RPC_WE("incoming_transfers", on_incoming_transfers, rpc::COMMAND_RPC_INCOMING_TRANSFERS)
+       MAP_JON_RPC_WE("bc_height",          get_blockchain_height, rpc::COMMAND_BC_HEIGHT)
       //  MAP_JON_RPC_WE("query_key",         on_query_key,         rpc::COMMAND_RPC_QUERY_KEY)
       END_JSON_RPC_MAP()
     END_URI_MAP2()
@@ -62,7 +63,30 @@ namespace web_wallet
       bool handle_command_line(const boost::program_options::variables_map& vm);
 
       bool create_wallet_from_seed(tools::wallet2* m_wallet, std::string seed, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers);
+      
+      uint64_t get_daemon_blockchain_height(std::string& err);
+      bool get_blockchain_height(const rpc::COMMAND_BC_HEIGHT::request& req, rpc::COMMAND_BC_HEIGHT::response& res, epee::json_rpc::error& er, connection_context& cntx);
 
+      inline std::string interpret_rpc_response(bool ok, const std::string& status)
+      {
+        std::string err;
+        if (ok)
+        {
+          if (status == CORE_RPC_STATUS_BUSY)
+          {
+            err = "daemon is busy. Please try later";
+          }
+          else if (status != CORE_RPC_STATUS_OK)
+          {
+            err = status;
+          }
+        }
+        else
+        {
+          err = "possible lost connection to daemon";
+        }
+        return err;
+      }
       //json rpc v2
       //bool on_query_key(const rpc::COMMAND_RPC_QUERY_KEY::request& req, rpc::COMMAND_RPC_QUERY_KEY::response& res, epee::json_rpc::error& er, connection_context& cntx);
 

@@ -350,6 +350,26 @@ namespace web_wallet
 	 delete m_wallet;
    return true;
   }
+  //----------------------------------------------------------------------------------------------------
+  uint64_t rpc_server::get_daemon_blockchain_height(std::string& err)
+  {
+    cryptonote::COMMAND_RPC_GET_HEIGHT::request req;
+    cryptonote::COMMAND_RPC_GET_HEIGHT::response res = boost::value_initialized<cryptonote::COMMAND_RPC_GET_HEIGHT::response>();
+    bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/getheight", req, res, m_http_client);
+    err = interpret_rpc_response(r, res.status);
+    return res.height;
+  }
+  //----------------------------------------------------------------------------------------------------
+  bool rpc_server::get_blockchain_height(const rpc::COMMAND_BC_HEIGHT::request& req, rpc::COMMAND_BC_HEIGHT::response& res, epee::json_rpc::error& er, connection_context& cntx)
+  {
+    std::string err;
+    uint64_t bc_height = get_daemon_blockchain_height(err);
+    if (err.empty())
+      res.height = bc_height;
+    else
+      er.message = err;
+    return true;
+  }
   ////------------------------------------------------------------------------------------------------------------------------------
   //bool rpc_server::on_transfer_split(const rpc::COMMAND_RPC_TRANSFER_SPLIT::request& req, rpc::COMMAND_RPC_TRANSFER_SPLIT::response& res, epee::json_rpc::error& er, connection_context& cntx)
   //{
