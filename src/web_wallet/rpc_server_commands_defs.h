@@ -30,13 +30,15 @@ namespace rpc
   {
     struct request
     {
-      std::string seed;
+      std::string address;
+      std::string view_key;
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
 
       BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(seed)
+        KV_SERIALIZE(address)
+        KV_SERIALIZE(view_key)
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
@@ -47,52 +49,51 @@ namespace rpc
     {
       std::string address;
       std::string key;
-      std::string spend_key;
-	    uint64_t 	 balance;
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(address)
         KV_SERIALIZE(key)
-		    KV_SERIALIZE(spend_key)
       END_KV_SERIALIZE_MAP()
     };
   };
 
-  struct COMMAND_RPC_CREATE_WALLET
-  {
-    struct request
-    {
-      BEGIN_KV_SERIALIZE_MAP()
-      END_KV_SERIALIZE_MAP()
-    };
+  // struct COMMAND_RPC_CREATE_WALLET
+  // {
+  //   struct request
+  //   {
+  //     BEGIN_KV_SERIALIZE_MAP()
+  //     END_KV_SERIALIZE_MAP()
+  //   };
 
-    struct response
-    {
-      std::string seed;
-      uint64_t account_create_time;
-      uint64_t local_bc_height;
-      std::string transfers;
+  //   struct response
+  //   {
+  //     std::string seed;
+  //     uint64_t account_create_time;
+  //     uint64_t local_bc_height;
+  //     std::string transfers;
 
-      BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(seed)
-        KV_SERIALIZE(account_create_time)
-        KV_SERIALIZE(local_bc_height)
-        KV_SERIALIZE(transfers)
-      END_KV_SERIALIZE_MAP()
-    };
-  };
+  //     BEGIN_KV_SERIALIZE_MAP()
+  //       KV_SERIALIZE(seed)
+  //       KV_SERIALIZE(account_create_time)
+  //       KV_SERIALIZE(local_bc_height)
+  //       KV_SERIALIZE(transfers)
+  //     END_KV_SERIALIZE_MAP()
+  //   };
+  // };
 
   struct COMMAND_RPC_GET_BALANCE
   {
 
     struct request
     {
-      std::string seed;
+      std::string address;
+      std::string view_key;
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
 
       BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(seed)
+        KV_SERIALIZE(address)
+        KV_SERIALIZE(view_key)
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
@@ -122,13 +123,17 @@ namespace rpc
 
     struct request
     {
-      std::string seed;
+      std::string address;
+      std::string view_key;
+      std::string spend_key;
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
 
       BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(seed)
+        KV_SERIALIZE(address)
+        KV_SERIALIZE(view_key)
+        KV_SERIALIZE(spend_key)
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
@@ -209,7 +214,9 @@ namespace rpc
       uint64_t mixin;
       uint64_t unlock_time;
       std::string payment_id;
-      std::string seed;
+      std::string address;
+      std::string view_key;
+      std::string spend_key;
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
@@ -220,7 +227,9 @@ namespace rpc
         KV_SERIALIZE(mixin)
         KV_SERIALIZE(unlock_time)
         KV_SERIALIZE(payment_id)
-        KV_SERIALIZE(seed)
+        KV_SERIALIZE(address)
+        KV_SERIALIZE(view_key)
+        KV_SERIALIZE(spend_key)
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
@@ -348,14 +357,16 @@ namespace rpc
     struct request
     {
       std::string transfer_type;
-      std::string seed;
+      std::string address;
+      std::string view_key;
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(transfer_type)
-        KV_SERIALIZE(seed)
+        KV_SERIALIZE(address)
+        KV_SERIALIZE(view_key)
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)

@@ -31,7 +31,7 @@ namespace web_wallet
     BEGIN_URI_MAP2()
       BEGIN_JSON_RPC_MAP("/json_rpc")
         MAP_JON_RPC_WE("set_wallet",         on_set_wallet,        rpc::COMMAND_RPC_SET_WALLET)
-        MAP_JON_RPC_WE("create_wallet",      on_create_wallet,     rpc::COMMAND_RPC_CREATE_WALLET)
+        // MAP_JON_RPC_WE("create_wallet",      on_create_wallet,     rpc::COMMAND_RPC_CREATE_WALLET)
         MAP_JON_RPC_WE("getbalance",         on_getbalance,        rpc::COMMAND_RPC_GET_BALANCE)
         MAP_JON_RPC_WE("refresh",            on_refresh,           rpc::COMMAND_RPC_REFRESH)
       //  MAP_JON_RPC_WE("getaddress",         on_getaddress,         rpc::COMMAND_RPC_GET_ADDRESS)
@@ -48,7 +48,7 @@ namespace web_wallet
 
       //json_rpc
       bool on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er, connection_context& cntx);
-	    bool on_create_wallet(const rpc::COMMAND_RPC_CREATE_WALLET::request& req, rpc::COMMAND_RPC_CREATE_WALLET::response& res, epee::json_rpc::error & er, rpc_server::connection_context & cntx);
+	    // bool on_create_wallet(const rpc::COMMAND_RPC_CREATE_WALLET::request& req, rpc::COMMAND_RPC_CREATE_WALLET::response& res, epee::json_rpc::error & er, rpc_server::connection_context & cntx);
       bool on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx);
       bool on_refresh(const rpc::COMMAND_RPC_REFRESH::request& req, rpc::COMMAND_RPC_REFRESH::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx);
       // bool on_getaddress(const rpc::COMMAND_RPC_GET_ADDRESS::request& req, rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, connection_context& cntx);
@@ -62,7 +62,7 @@ namespace web_wallet
 
       bool handle_command_line(const boost::program_options::variables_map& vm);
 
-      bool create_wallet_from_seed(tools::wallet2* m_wallet, std::string seed, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers);
+      bool create_wallet_from_keys(tools::wallet2* m_wallet, std::string seed, std::string view_key, std::string spend_key, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers);
       
       uint64_t get_daemon_blockchain_height(std::string& err);
       bool get_blockchain_height(const rpc::COMMAND_BC_HEIGHT::request& req, rpc::COMMAND_BC_HEIGHT::response& res, epee::json_rpc::error& er, connection_context& cntx);

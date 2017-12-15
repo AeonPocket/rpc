@@ -614,17 +614,33 @@ void wallet2::load(const std::string& wallet_, const std::string& password)
   m_local_bc_height = m_blockchain.size();
 }
 //----------------------------------------------------------------------------------------------------
-void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers) 
-{
+void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers,std::string address, std::string view_key, std::string spend_key) {
+  cryptonote::account_public_address m_account_public_address;
+  crypto::secret_key m_account_view_key;
+  crypto::secret_key m_account_spend_key;
+
+  get_account_address_from_str(m_account_public_address, address);
+  string_tools::hex_to_pod(view_key, m_account_view_key);
+
+  bool c = verify_keys(m_account_view_key, m_account_public_address.m_view_public_key);
+  THROW_WALLET_EXCEPTION_IF(!c, error::invalid_password);
+
+  if (spend_key != "") {
+    string_tools::hex_to_pod(spend_key, m_account_spend_key);
+    c = verify_keys(m_account_spend_key, m_account_public_address.m_spend_public_key);
+    THROW_WALLET_EXCEPTION_IF(!c, error::invalid_password);
+  }
+
+  m_account.generate(m_account_public_address, m_account_view_key, m_account_spend_key);
+
   m_account.set_createtime(account_create_time);
   m_local_bc_height = local_bc_height;
-  // string_tools::hex_to_pod(transfers, m_transfers);
   std::stringstream ss;
   ss.str(transfers);
   boost::archive::text_iarchive ia{ss};
   ia >> m_transfers;
   m_blockchain.resize(m_local_bc_height);
-};
+}
 //----------------------------------------------------------------------------------------------------
 void wallet2::store()
 {

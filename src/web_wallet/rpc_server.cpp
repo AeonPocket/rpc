@@ -94,23 +94,9 @@ namespace web_wallet
 	  return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::create_wallet_from_seed(tools::wallet2* m_wallet, std::string seed, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers) {
-    crypto::secret_key recovery_param;
-    crypto::ElectrumWords::words_to_bytes(seed, recovery_param);
-    
-
-    boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
-    // boost::filesystem::path l_path = "/home/pushkar/Documents/aur/aeon/build/release/src/wallet";
-    std::string l_path_address = l_path.string();
-    std::string l_path_keys = l_path.string();
-
+  bool rpc_server::create_wallet_from_keys(tools::wallet2* m_wallet, std::string address, std::string view_key, std::string spend_key, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers) {
     m_wallet->init(m_daemon_address);
-    m_wallet->generate(l_path.string(), "y", recovery_param, true, false);
-    m_wallet->load(l_path.string(), "y");
-    m_wallet->load(account_create_time, local_bc_height, transfers);
-    remove(l_path.string().c_str());
-    remove(l_path_address.append(".address.txt").c_str());
-    remove(l_path_keys.append(".keys").c_str());
+    m_wallet->load(account_create_time, local_bc_height, transfers, address, view_key, spend_key);
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
@@ -119,10 +105,9 @@ namespace web_wallet
     try
     {
       tools::wallet2* m_wallet = new tools::wallet2();
-      create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
+      create_wallet_from_keys(m_wallet, req.address, req.view_key, "", req.account_create_time, req.local_bc_height, req.transfers);
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
-      res.spend_key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_spend_secret_key);
 	    delete m_wallet;
 	  }
     catch (std::exception& e)
@@ -133,57 +118,57 @@ namespace web_wallet
     }
     return true;
   }
-  //------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::on_create_wallet(const rpc::COMMAND_RPC_CREATE_WALLET::request& req, rpc::COMMAND_RPC_CREATE_WALLET::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
-  {
-    try
-    {
-      tools::wallet2* m_wallet = new tools::wallet2();
-	    boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
-      std::string l_path_address = l_path.string();
-      std::string l_path_keys = l_path.string();
+  // //------------------------------------------------------------------------------------------------------------------------------
+  // bool rpc_server::on_create_wallet(const rpc::COMMAND_RPC_CREATE_WALLET::request& req, rpc::COMMAND_RPC_CREATE_WALLET::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
+  // {
+  //   try
+  //   {
+  //     tools::wallet2* m_wallet = new tools::wallet2();
+	//     boost::filesystem::path l_path = web_wallet::TEMP_DIR / "wallet";
+  //     std::string l_path_address = l_path.string();
+  //     std::string l_path_keys = l_path.string();
 
-      crypto::secret_key recovery_param = m_wallet->generate(l_path.string(), "y");
+  //     crypto::secret_key recovery_param = m_wallet->generate(l_path.string(), "y");
      
-      m_wallet->load(l_path.string(), "y");
-      remove(l_path.string().c_str());
-      remove(l_path_address.append(".address.txt").c_str());
-      remove(l_path_keys.append(".keys").c_str());
+  //     m_wallet->load(l_path.string(), "y");
+  //     remove(l_path.string().c_str());
+  //     remove(l_path_address.append(".address.txt").c_str());
+  //     remove(l_path_keys.append(".keys").c_str());
 	    
-      crypto::ElectrumWords::bytes_to_words(recovery_param, res.seed);
+  //     crypto::ElectrumWords::bytes_to_words(recovery_param, res.seed);
 	    
-      res.seed = string_tools::trim(res.seed);
+  //     res.seed = string_tools::trim(res.seed);
 
-      tools::wallet2::transfer_container transfers;
-	    m_wallet->get_transfers(transfers);
-      std::ostringstream stream;
-      boost::archive::text_oarchive oa{stream};
-      oa<<transfers;
+  //     tools::wallet2::transfer_container transfers;
+	//     m_wallet->get_transfers(transfers);
+  //     std::ostringstream stream;
+  //     boost::archive::text_oarchive oa{stream};
+  //     oa<<transfers;
 
-      cryptonote::COMMAND_RPC_GET_HEIGHT::request request;
-      cryptonote::COMMAND_RPC_GET_HEIGHT::response response = boost::value_initialized<cryptonote::COMMAND_RPC_GET_HEIGHT::response>();
-      bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/getheight", request, response, m_http_client);
+  //     cryptonote::COMMAND_RPC_GET_HEIGHT::request request;
+  //     cryptonote::COMMAND_RPC_GET_HEIGHT::response response = boost::value_initialized<cryptonote::COMMAND_RPC_GET_HEIGHT::response>();
+  //     bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/getheight", request, response, m_http_client);
 
-      res.transfers = stream.str();
-      res.account_create_time = m_wallet->get_account().get_createtime();
-      res.local_bc_height = response.height;
-	    delete m_wallet;
-    }
-    catch (std::exception& e)
-    {
-      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-      er.message = e.what();
-      return false;
-    }
-    return true;
-  }
+  //     res.transfers = stream.str();
+  //     res.account_create_time = m_wallet->get_account().get_createtime();
+  //     res.local_bc_height = response.height;
+	//     delete m_wallet;
+  //   }
+  //   catch (std::exception& e)
+  //   {
+  //     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+  //     er.message = e.what();
+  //     return false;
+  //   }
+  //   return true;
+  // }
   //------------------------------------------------------------------------------------------------------------------------------
   bool rpc_server::on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
   {
     try
     {
       tools::wallet2* m_wallet = new tools::wallet2();
-      create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
+      create_wallet_from_keys(m_wallet, req.address, req.view_key, "", req.account_create_time, req.local_bc_height, req.transfers);
 
 	    tools::wallet2::transfer_container transfers;
 	    m_wallet->get_transfers(transfers);
@@ -211,7 +196,7 @@ namespace web_wallet
     try
     {
       tools::wallet2* m_wallet = new tools::wallet2();
-      create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
+      create_wallet_from_keys(m_wallet, req.address, req.view_key, req.spend_key, req.account_create_time, req.local_bc_height, req.transfers);
       m_wallet->refresh_from_local_bc();
 
 	    tools::wallet2::transfer_container transfers;
@@ -299,7 +284,7 @@ namespace web_wallet
   {
 
     tools::wallet2* m_wallet = new tools::wallet2();
-    create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
+    create_wallet_from_keys(m_wallet, req.address, req.view_key, req.spend_key, req.account_create_time, req.local_bc_height, req.transfers);
     m_wallet->refresh_from_local_bc();
 
    std::vector<cryptonote::tx_destination_entry> dsts;
@@ -518,7 +503,7 @@ namespace web_wallet
   bool rpc_server::on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er, connection_context& cntx)
   {
     tools::wallet2* m_wallet = new tools::wallet2();
-    create_wallet_from_seed(m_wallet, req.seed, req.account_create_time, req.local_bc_height, req.transfers);
+    create_wallet_from_keys(m_wallet, req.address, req.view_key, "", req.account_create_time, req.local_bc_height, req.transfers);
 
    if(req.transfer_type.compare("all") != 0 && req.transfer_type.compare("available") != 0 && req.transfer_type.compare("unavailable") != 0)
    {
