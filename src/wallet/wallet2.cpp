@@ -614,7 +614,7 @@ void wallet2::load(const std::string& wallet_, const std::string& password)
   m_local_bc_height = m_blockchain.size();
 }
 //----------------------------------------------------------------------------------------------------
-void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers,std::string address, std::string view_key, std::string spend_key) {
+void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string address, std::string view_key, std::string spend_key, std::string key_images) {
   cryptonote::account_public_address m_account_public_address;
   crypto::secret_key m_account_view_key;
   crypto::secret_key m_account_spend_key;
@@ -639,6 +639,12 @@ void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::
   ss.str(transfers);
   boost::archive::text_iarchive ia{ss};
   ia >> m_transfers;
+
+  std::stringstream ss2;
+  ss2.str(key_images);
+  boost::archive::text_iarchive ib{ss2};
+  ib >> m_key_images;
+
   m_blockchain.resize(m_local_bc_height);
 }
 //----------------------------------------------------------------------------------------------------
@@ -675,6 +681,11 @@ uint64_t wallet2::balance()
 void wallet2::get_transfers(wallet2::transfer_container& incoming_transfers) const
 {
   incoming_transfers = m_transfers;
+}
+//----------------------------------------------------------------------------------------------------
+void wallet2::get_key_images(std::unordered_map<crypto::key_image, size_t>& key_images) const
+{
+  key_images = m_key_images;
 }
 //----------------------------------------------------------------------------------------------------
 void wallet2::get_payments(const crypto::hash& payment_id, std::list<wallet2::payment_details>& payments, uint64_t min_height) const

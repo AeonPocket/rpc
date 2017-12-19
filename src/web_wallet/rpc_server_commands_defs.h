@@ -35,6 +35,7 @@ namespace rpc
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
+      std::string key_images;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(address)
@@ -42,6 +43,7 @@ namespace rpc
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
       END_KV_SERIALIZE_MAP()
     };
 
@@ -90,6 +92,7 @@ namespace rpc
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
+      std::string key_images;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(address)
@@ -97,6 +100,7 @@ namespace rpc
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
       END_KV_SERIALIZE_MAP()
     };
 
@@ -107,6 +111,7 @@ namespace rpc
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
+      std::string key_images;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(balance)
@@ -114,6 +119,7 @@ namespace rpc
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
       END_KV_SERIALIZE_MAP()
     };
   };
@@ -129,6 +135,7 @@ namespace rpc
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
+      std::string key_images;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(address)
@@ -137,6 +144,7 @@ namespace rpc
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
       END_KV_SERIALIZE_MAP()
     };
 
@@ -147,6 +155,7 @@ namespace rpc
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
+      std::string key_images;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(balance)
@@ -154,6 +163,7 @@ namespace rpc
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
       END_KV_SERIALIZE_MAP()
     };
   };
@@ -220,6 +230,7 @@ namespace rpc
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
+      std::string key_images;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(destinations)
@@ -233,15 +244,24 @@ namespace rpc
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
       END_KV_SERIALIZE_MAP()
     };
 
     struct response
     {
       std::string tx_hash;
+      uint64_t account_create_time;
+      uint64_t local_bc_height;
+      std::string transfers;
+      std::string key_images;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(tx_hash)
+        KV_SERIALIZE(account_create_time)
+        KV_SERIALIZE(local_bc_height)
+        KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
       END_KV_SERIALIZE_MAP()
     };
   };
@@ -362,6 +382,7 @@ namespace rpc
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
+      std::string key_images;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(transfer_type)
@@ -370,6 +391,7 @@ namespace rpc
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
       END_KV_SERIALIZE_MAP()
     };
 

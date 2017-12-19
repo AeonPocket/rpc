@@ -134,7 +134,7 @@ namespace tools
 
     crypto::secret_key generate(const std::string& wallet, const std::string& password, const crypto::secret_key& recovery_param = crypto::secret_key(), bool recover = false, bool two_random = false);
     void load(const std::string& wallet, const std::string& password);
-    void load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string address, std::string view_key, std::string spend_key);
+    void load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string address, std::string view_key, std::string spend_key, std::string key_images);
     void store();
     cryptonote::account_base& get_account(){return m_account;}
 
@@ -173,6 +173,7 @@ namespace tools
     bool check_connection();
     void get_transfers(wallet2::transfer_container& incoming_transfers) const;
     void get_payments(const crypto::hash& payment_id, std::list<wallet2::payment_details>& payments, uint64_t min_height = 0) const;
+    void get_key_images(std::unordered_map<crypto::key_image, size_t>& key_images) const;
     uint64_t get_blockchain_current_height() const { return m_local_bc_height; }
     template <class t_archive>
     inline void serialize(t_archive &a, const unsigned int ver)
