@@ -134,7 +134,7 @@ namespace tools
 
     crypto::secret_key generate(const std::string& wallet, const std::string& password, const crypto::secret_key& recovery_param = crypto::secret_key(), bool recover = false, bool two_random = false);
     void load(const std::string& wallet, const std::string& password);
-    void load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string address, std::string view_key, std::string spend_key, std::string key_images);
+    void load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string address, std::string view_key, std::string key_images);
     void store();
     cryptonote::account_base& get_account(){return m_account;}
 
@@ -157,7 +157,7 @@ namespace tools
     void refresh(uint64_t start_height, size_t & blocks_fetched);
     void refresh(uint64_t start_height, size_t & blocks_fetched, bool& received_money);
     bool refresh(size_t & blocks_fetched, bool& received_money, bool& ok);
-    void refresh_from_local_bc();
+    void refresh_from_local_bc(std::list<std::string>& txs_hashes);
 
     uint64_t balance();
     uint64_t unlocked_balance();
@@ -200,7 +200,9 @@ namespace tools
     bool store_keys(const std::string& keys_file_name, const std::string& password);
     void load_keys(const std::string& keys_file_name, const std::string& password);
     void process_new_transaction(const cryptonote::transaction& tx, uint64_t height);
+    void process_new_transaction_2(const cryptonote::transaction& tx, uint64_t height, bool &found);
     void process_new_blockchain_entry(const cryptonote::block& b, cryptonote::block_complete_entry& bche, crypto::hash& bl_id, uint64_t height);
+	void process_new_blockchain_entry_2(const cryptonote::block& b, cryptonote::block_complete_entry& bche, crypto::hash& bl_id, uint64_t height, std::list<std::string>& txs_hashes);
     void detach_blockchain(uint64_t height);
     void get_short_chain_history(std::list<crypto::hash>& ids);
     bool is_tx_spendtime_unlocked(uint64_t unlock_time) const;

@@ -202,6 +202,77 @@ void wallet2::process_new_transaction(const cryptonote::transaction& tx, uint64_
   }
 }
 //----------------------------------------------------------------------------------------------------
+void wallet2::process_new_transaction_2(const cryptonote::transaction& tx, uint64_t height, bool &found)
+{
+  process_unconfirmed(tx);
+  std::vector<size_t> outs;
+  uint64_t tx_money_got_in_outs = 0;
+
+  std::vector<tx_extra_field> tx_extra_fields;
+  if (!parse_tx_extra(tx.extra, tx_extra_fields))
+  {
+    // Extra may only be partially parsed, it's OK if tx_extra_fields contains public key
+    LOG_PRINT_L0("Transaction extra has unsupported format: " << get_transaction_hash(tx));
+  }
+
+  tx_extra_pub_key pub_key_field;
+  if (!find_tx_extra_field_by_type(tx_extra_fields, pub_key_field))
+  {
+    LOG_PRINT_L0("Public key wasn't found in the transaction extra. Skipping transaction " << get_transaction_hash(tx));
+    if (0 != m_callback)
+      m_callback->on_skip_transaction(height, tx);
+    return;
+  }
+
+  crypto::public_key tx_pub_key = pub_key_field.pub_key;
+  bool r = lookup_acc_outs(m_account.get_keys(), tx, tx_pub_key, outs, tx_money_got_in_outs);
+  THROW_WALLET_EXCEPTION_IF(!r, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
+
+  uint64_t tx_money_spent_in_ins = 0;
+  // check all outputs for spending (compare key images)
+  BOOST_FOREACH(auto& in, tx.vin)
+  {
+    if (in.type() != typeid(cryptonote::txin_to_key))
+      continue;
+    auto it = m_key_images.find(boost::get<cryptonote::txin_to_key>(in).k_image);
+    if (it != m_key_images.end())
+    {
+      LOG_PRINT_L0("Spent money: " << print_money(boost::get<cryptonote::txin_to_key>(in).amount) << ", with tx: " << get_transaction_hash(tx));
+      tx_money_spent_in_ins += boost::get<cryptonote::txin_to_key>(in).amount;
+      transfer_details& td = m_transfers[it->second];
+      td.m_spent = true;
+      if (0 != m_callback)
+        m_callback->on_money_spent(height, td.m_tx, td.m_internal_output_index, tx);
+    }
+  }
+
+  if (!outs.empty() && tx_money_got_in_outs)
+  {
+    found = true;
+    return;
+  }
+
+  tx_extra_nonce extra_nonce;
+  if (find_tx_extra_field_by_type(tx_extra_fields, extra_nonce))
+  {
+    crypto::hash payment_id;
+    if (get_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id))
+    {
+      uint64_t received = (tx_money_spent_in_ins < tx_money_got_in_outs) ? tx_money_got_in_outs - tx_money_spent_in_ins : 0;
+      if (0 < received && null_hash != payment_id)
+      {
+        payment_details payment;
+        payment.m_tx_hash = cryptonote::get_transaction_hash(tx);
+        payment.m_amount = received;
+        payment.m_block_height = height;
+        payment.m_unlock_time = tx.unlock_time;
+        m_payments.emplace(payment_id, payment);
+        LOG_PRINT_L2("Payment found: " << payment_id << " / " << payment.m_tx_hash << " / " << payment.m_amount);
+      }
+    }
+  }
+}
+//----------------------------------------------------------------------------------------------------
 void wallet2::process_unconfirmed(const cryptonote::transaction& tx)
 {
   auto unconf_it = m_unconfirmed_txs.find(get_transaction_hash(tx));
@@ -363,7 +434,7 @@ void wallet2::refresh(uint64_t start_height, size_t & blocks_fetched, bool& rece
   LOG_PRINT_L1("Refresh done, blocks received: " << blocks_fetched << ", balance: " << print_money(balance()) << ", unlocked: " << print_money(unlocked_balance()));
 }
 //----------------------------------------------------------------------------------------------------
-void wallet2::refresh_from_local_bc()
+void wallet2::refresh_from_local_bc(std::list<std::string>& txs_hashes)
 {
   size_t blocks_fetched = 0;
   size_t added_blocks = 0;
@@ -373,7 +444,51 @@ void wallet2::refresh_from_local_bc()
   {
     try
     {
-      pull_blocks(m_local_bc_height, added_blocks);
+	  added_blocks = 0;
+	  cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::request req = AUTO_VAL_INIT(req);
+	  cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::response res = AUTO_VAL_INIT(res);
+	  get_short_chain_history(req.block_ids);
+	  req.start_height = m_local_bc_height;
+	  bool r = net_utils::invoke_http_bin_remote_command2(m_daemon_address + "/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+	  THROW_WALLET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblocks.bin");
+	  THROW_WALLET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblocks.bin");
+	  THROW_WALLET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_blocks_error, res.status);
+
+	  size_t current_index = res.start_height;
+	  BOOST_FOREACH(auto& bl_entry, res.blocks)
+	  {
+		  cryptonote::block bl;
+		  cryptonote::transaction tx;
+		  r = cryptonote::parse_and_validate_block_from_blob(bl_entry.block, bl);
+		  THROW_WALLET_EXCEPTION_IF(!r, error::block_parse_error, bl_entry.block);
+
+		  crypto::hash bl_id = get_block_hash(bl);
+		  if (current_index >= m_blockchain.size())
+		  {
+			  process_new_blockchain_entry_2(bl, bl_entry, bl_id, current_index, txs_hashes);
+			  //++blocks_added;
+			  ++added_blocks;
+		  }
+		  else if (bl_id != m_blockchain[current_index])
+		  {
+			  //split detected here !!!
+			  THROW_WALLET_EXCEPTION_IF(current_index == res.start_height, error::wallet_internal_error,
+				  "wrong daemon response: split starts from the first block in response " + string_tools::pod_to_hex(bl_id) +
+				  " (height " + std::to_string(res.start_height) + "), local block id at this height: " +
+				  string_tools::pod_to_hex(m_blockchain[current_index]));
+
+			  detach_blockchain(current_index);
+			  process_new_blockchain_entry(bl, bl_entry, bl_id, current_index);
+		  }
+		  else
+		  {
+			  LOG_PRINT_L2("Block is already in blockchain: " << string_tools::pod_to_hex(bl_id));
+		  }
+          if (!txs_hashes.empty()) {
+              break;
+          }
+		  ++current_index;
+	  }
       blocks_fetched += added_blocks;
       if(!added_blocks)
         break;
@@ -395,6 +510,48 @@ void wallet2::refresh_from_local_bc()
   }
   m_blockchain.resize(m_local_bc_height + blocks_fetched);
   LOG_PRINT_L1("Refresh done, blocks received: " << blocks_fetched << ", balance: " << print_money(balance()) << ", unlocked: " << print_money(unlocked_balance()));
+}
+//----------------------------------------------------------------------------------------------------
+void wallet2::process_new_blockchain_entry_2(const cryptonote::block& b, cryptonote::block_complete_entry& bche, crypto::hash& bl_id, uint64_t height, std::list<std::string>& tx_hashes)
+{
+	//handle transactions from new block
+
+	//optimization: seeking only for blocks that are not older then the wallet creation time plus 1 day. 1 day is for possible user incorrect time setup
+	if (b.timestamp + 60 * 60 * 24 > m_account.get_createtime())
+	{
+		TIME_MEASURE_START(miner_tx_handle_time);
+		process_new_transaction(b.miner_tx, height);
+		TIME_MEASURE_FINISH(miner_tx_handle_time);
+
+		TIME_MEASURE_START(txs_handle_time);
+		bool found = false;
+		BOOST_FOREACH(auto& txblob, bche.txs)
+		{
+			cryptonote::transaction tx;
+			bool r = parse_and_validate_tx_from_blob(txblob, tx);
+		
+			THROW_WALLET_EXCEPTION_IF(!r, error::tx_parse_error, txblob);
+			process_new_transaction_2(tx, height, found);
+			if (found) {
+                crypto::hash hash = get_transaction_hash(tx);
+				tx_hashes.push_back(string_tools::pod_to_hex(hash));
+			}
+		}
+		TIME_MEASURE_FINISH(txs_handle_time);
+		if (!tx_hashes.empty()) {
+			return;
+		}
+//		LOG_PRINT_L2("Processed block: " << bl_id << ", height " << height << ", " << miner_tx_handle_time + txs_handle_time << "(" << miner_tx_handle_time << "/" << txs_handle_time << ")ms" << get_transaction_hash(tx)) ;
+	}
+	else
+	{
+		LOG_PRINT_L2("Skipped block by timestamp, height: " << height << ", block time " << b.timestamp << ", account time " << m_account.get_createtime());
+	}
+	m_blockchain.push_back(bl_id);
+	++m_local_bc_height;
+
+	if (0 != m_callback)
+		m_callback->on_new_block(height, b);
 }
 //----------------------------------------------------------------------------------------------------
 bool wallet2::refresh(size_t & blocks_fetched, bool& received_money, bool& ok)
@@ -614,10 +771,9 @@ void wallet2::load(const std::string& wallet_, const std::string& password)
   m_local_bc_height = m_blockchain.size();
 }
 //----------------------------------------------------------------------------------------------------
-void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string address, std::string view_key, std::string spend_key, std::string key_images) {
+void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string address, std::string view_key, std::string key_images) {
   cryptonote::account_public_address m_account_public_address;
   crypto::secret_key m_account_view_key;
-  crypto::secret_key m_account_spend_key;
 
   get_account_address_from_str(m_account_public_address, address);
   string_tools::hex_to_pod(view_key, m_account_view_key);
@@ -625,13 +781,7 @@ void wallet2::load(uint64_t account_create_time, uint64_t local_bc_height, std::
   bool c = verify_keys(m_account_view_key, m_account_public_address.m_view_public_key);
   THROW_WALLET_EXCEPTION_IF(!c, error::invalid_password);
 
-  if (spend_key != "") {
-    string_tools::hex_to_pod(spend_key, m_account_spend_key);
-    c = verify_keys(m_account_spend_key, m_account_public_address.m_spend_public_key);
-    THROW_WALLET_EXCEPTION_IF(!c, error::invalid_password);
-  }
-
-  m_account.generate(m_account_public_address, m_account_view_key, m_account_spend_key);
+  m_account.generate(m_account_public_address, m_account_view_key);
 
   m_account.set_createtime(account_create_time);
   m_local_bc_height = local_bc_height;

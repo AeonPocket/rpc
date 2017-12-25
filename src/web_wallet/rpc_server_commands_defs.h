@@ -131,7 +131,6 @@ namespace rpc
     {
       std::string address;
       std::string view_key;
-      std::string spend_key;
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
@@ -140,7 +139,6 @@ namespace rpc
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(address)
         KV_SERIALIZE(view_key)
-        KV_SERIALIZE(spend_key)
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
@@ -150,18 +148,11 @@ namespace rpc
 
     struct response
     {
-      uint64_t balance;
-      uint64_t unlocked_balance;
-      uint64_t account_create_time;
-      uint64_t local_bc_height;
+      std::list<std::string> txs_hashes;
       std::string transfers;
-      std::string key_images;
-
+	  std::string key_images;
       BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(balance)
-        KV_SERIALIZE(unlocked_balance)
-        KV_SERIALIZE(account_create_time)
-        KV_SERIALIZE(local_bc_height)
+        KV_SERIALIZE(txs_hashes)
         KV_SERIALIZE(transfers)
         KV_SERIALIZE(key_images)
       END_KV_SERIALIZE_MAP()

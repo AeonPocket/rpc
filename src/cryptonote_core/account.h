@@ -58,7 +58,7 @@ namespace cryptonote
   public:
     account_base();
     crypto::secret_key generate(const crypto::secret_key& recovery_key = crypto::secret_key(), bool recover = false, bool two_random = false);
-    void generate(cryptonote::account_public_address address, crypto::secret_key view_key, crypto::secret_key spend_key);
+    void generate(cryptonote::account_public_address address, crypto::secret_key view_key);
     const account_keys& get_keys() const;
     std::string get_public_address_str();
 

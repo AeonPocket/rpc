@@ -1,7 +1,7 @@
 #ifndef MINIUPNPCSTRINGS_H_INCLUDED
 #define MINIUPNPCSTRINGS_H_INCLUDED
 
-#define OS_STRING "Windows"
+#define OS_STRING "Linux"
 #define MINIUPNPC_VERSION_STRING "2.0"
 
 #if 0

@@ -94,9 +94,9 @@ namespace web_wallet
 	  return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::create_wallet_from_keys(tools::wallet2* m_wallet, std::string address, std::string view_key, std::string spend_key, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string key_images) {
+  bool rpc_server::create_wallet_from_keys(tools::wallet2* m_wallet, std::string address, std::string view_key, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string key_images) {
     m_wallet->init(m_daemon_address);
-    m_wallet->load(account_create_time, local_bc_height, transfers, address, view_key, spend_key, key_images);
+    m_wallet->load(account_create_time, local_bc_height, transfers, address, view_key, key_images);
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ namespace web_wallet
     try
     {
       tools::wallet2* m_wallet = new tools::wallet2();
-      create_wallet_from_keys(m_wallet, req.address, req.view_key, "", req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
+      create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);
 	    delete m_wallet;
@@ -168,7 +168,7 @@ namespace web_wallet
     try
     {
       tools::wallet2* m_wallet = new tools::wallet2();
-      create_wallet_from_keys(m_wallet, req.address, req.view_key, "", req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
+      create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
 
 	    tools::wallet2::transfer_container transfers;
 	    m_wallet->get_transfers(transfers);
@@ -203,29 +203,26 @@ namespace web_wallet
   {
     try
     {
-      tools::wallet2* m_wallet = new tools::wallet2();
-      create_wallet_from_keys(m_wallet, req.address, req.view_key, req.spend_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
-      m_wallet->refresh_from_local_bc();
+        tools::wallet2* m_wallet = new tools::wallet2();
+        create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
+        std::list<std::string> txs_hashes;
+        m_wallet->refresh_from_local_bc(txs_hashes);
 
 	    tools::wallet2::transfer_container transfers;
 	    m_wallet->get_transfers(transfers);
-      std::ostringstream stream;
-      boost::archive::text_oarchive oa{stream};
-      oa<<transfers;
-      res.transfers = stream.str();
+        std::ostringstream stream;
+        boost::archive::text_oarchive oa{stream};
+        oa<<transfers;
+        res.transfers = stream.str();
+        res.txs_hashes = txs_hashes;
 
-      std::unordered_map<crypto::key_image, size_t> key_images;
-      m_wallet->get_key_images(key_images);
-      std::ostringstream streamB;
-      boost::archive::text_oarchive ob{streamB};
-      ob<<key_images;
-      res.key_images = streamB.str();
-
-      res.balance = m_wallet->balance();
-      res.unlocked_balance = m_wallet->unlocked_balance();
-      res.account_create_time = m_wallet->get_account().get_createtime();
-      res.local_bc_height = m_wallet->get_blockchain_current_height();
-	    delete m_wallet;
+        std::unordered_map<crypto::key_image, size_t> key_images;
+        m_wallet->get_key_images(key_images);
+        std::ostringstream streamB;
+        boost::archive::text_oarchive ob{streamB};
+        ob<<key_images;
+        res.key_images = streamB.str();
+        delete m_wallet;
     }
     catch (std::exception& e)
     {
@@ -300,8 +297,7 @@ namespace web_wallet
   {
 
     tools::wallet2* m_wallet = new tools::wallet2();
-    create_wallet_from_keys(m_wallet, req.address, req.view_key, req.spend_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
-    m_wallet->refresh_from_local_bc();
+    create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, res.key_images);
 
    std::vector<cryptonote::tx_destination_entry> dsts;
    std::vector<uint8_t> extra;
@@ -537,7 +533,7 @@ namespace web_wallet
   bool rpc_server::on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er, connection_context& cntx)
   {
     tools::wallet2* m_wallet = new tools::wallet2();
-    create_wallet_from_keys(m_wallet, req.address, req.view_key, "", req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
+    create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
 
    if(req.transfer_type.compare("all") != 0 && req.transfer_type.compare("available") != 0 && req.transfer_type.compare("unavailable") != 0)
    {

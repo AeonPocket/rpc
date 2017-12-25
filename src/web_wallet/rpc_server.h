@@ -62,7 +62,7 @@ namespace web_wallet
 
       bool handle_command_line(const boost::program_options::variables_map& vm);
 
-      bool create_wallet_from_keys(tools::wallet2* m_wallet, std::string seed, std::string view_key, std::string spend_key, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string key_images);
+      bool create_wallet_from_keys(tools::wallet2* m_wallet, std::string address, std::string view_key, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string key_images);
       
       uint64_t get_daemon_blockchain_height(std::string& err);
       bool get_blockchain_height(const rpc::COMMAND_BC_HEIGHT::request& req, rpc::COMMAND_BC_HEIGHT::response& res, epee::json_rpc::error& er, connection_context& cntx);

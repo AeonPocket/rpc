@@ -88,10 +88,9 @@ DISABLE_VS_WARNINGS(4244 4345)
     return first;
   }
   //-----------------------------------------------------------------
-  void account_base::generate(cryptonote::account_public_address address, crypto::secret_key view_key, crypto::secret_key spend_key) {
+  void account_base::generate(cryptonote::account_public_address address, crypto::secret_key view_key) {
     m_keys.m_account_address = address;
     m_keys.m_view_secret_key = view_key;
-    m_keys.m_spend_secret_key = spend_key;
   }
   //-----------------------------------------------------------------
   const account_keys& account_base::get_keys() const
