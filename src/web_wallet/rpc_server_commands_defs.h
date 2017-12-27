@@ -11,6 +11,22 @@ namespace rpc
 {
 #define WALLET_RPC_STATUS_OK      "OK"
 #define WALLET_RPC_STATUS_BUSY    "BUSY"
+
+  struct transfers
+  {
+      uint64_t amount;
+      uint64_t global_index;
+      std::string tx_hash;
+      std::string key_image;
+
+      BEGIN_KV_SERIALIZE_MAP()
+          KV_SERIALIZE(amount)
+          KV_SERIALIZE(key_image)
+          KV_SERIALIZE(global_index)
+          KV_SERIALIZE(tx_hash)
+      END_KV_SERIALIZE_MAP()
+  };
+
   struct transfer_details
   {
     uint64_t amount;
@@ -25,6 +41,31 @@ namespace rpc
       KV_SERIALIZE(tx_hash)
     END_KV_SERIALIZE_MAP()
   };
+
+    struct COMMAND_RPC_TRANSACTION_FULL
+    {
+        struct request {
+            std::string tx_hash;
+
+            BEGIN_KV_SERIALIZE_MAP()
+                KV_SERIALIZE(tx_hash)
+            END_KV_SERIALIZE_MAP()
+        };
+
+        struct response {
+            std::string tx_hash;
+            std::string tx_extra_pub;
+            std::list<transfers> inputs;
+            std::list<transfers> outpus;
+
+            BEGIN_KV_SERIALIZE_MAP()
+                KV_SERIALIZE(tx_hash)
+                KV_SERIALIZE(tx_extra_pub)
+                KV_SERIALIZE(inputs)
+                KV_SERIALIZE(outpus)
+            END_KV_SERIALIZE_MAP()
+        };
+    };
 
   struct COMMAND_RPC_SET_WALLET
   {

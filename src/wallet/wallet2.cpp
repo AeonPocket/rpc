@@ -490,7 +490,7 @@ void wallet2::refresh_from_local_bc(std::list<std::string>& txs_hashes)
 		  ++current_index;
 	  }
       blocks_fetched += added_blocks;
-      if(!added_blocks)
+      if(!added_blocks || !txs_hashes.empty())
         break;
     }
     catch (const std::exception&)

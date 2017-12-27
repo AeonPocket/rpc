@@ -233,6 +233,50 @@ namespace web_wallet
     return true;
   }
   ////------------------------------------------------------------------------------------------------------------------------------
+  bool rpc_server::on_get_transaction(const rpc::COMMAND_RPC_TRANSACTION_FULL::request &req, rpc::COMMAND_RPC_TRANSACTION_FULL::response &res, epee::json_rpc::error &er, connection_context &cntx)
+  {
+      std::string err;
+      cryptonote::COMMAND_RPC_GET_TRANSACTIONS::request request = boost::value_initialized<cryptonote::COMMAND_RPC_GET_TRANSACTIONS::request>();
+      cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response response = boost::value_initialized<cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response>();
+
+      request.txs_hashes.push_back(req.tx_hash);
+      bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/gettransactions", request, response, m_http_client);
+      err = interpret_rpc_response(r, response.status);
+
+      if (err.empty()) {
+          if (response.txs_as_hex.size() == 1) {
+              cryptonote::transaction tx;
+              cryptonote::blobdata txblob;
+              string_tools::parse_hexstr_to_binbuff(response.txs_as_hex.front(), txblob);
+              bool r = parse_and_validate_tx_from_blob(txblob, tx);
+              std::vector<cryptonote::tx_extra_field> tx_extra_fields;
+              if(!parse_tx_extra(tx.extra, tx_extra_fields))
+              {
+                  // Extra may only be partially parsed, it's OK if tx_extra_fields contains public key
+                  LOG_PRINT_L0("Transaction extra has unsupported format: " << get_transaction_hash(tx));
+                  return false;
+              }
+
+              cryptonote::tx_extra_pub_key pub_key_field;
+              if(!find_tx_extra_field_by_type(tx_extra_fields, pub_key_field))
+              {
+                  LOG_PRINT_L0("Public key wasn't found in the transaction extra. Skipping transaction " << get_transaction_hash(tx));
+                  return false;
+              }
+
+              crypto::public_key tx_pub_key = pub_key_field.pub_key;
+
+              res.tx_extra_pub = string_tools::pod_to_hex(tx_pub_key);
+              LOG_PRINT_L0(res.tx_extra_pub);
+          } else {
+              return false;
+          }
+      } else {
+          er.message = err;
+      }
+      return true;
+  }
+  ////------------------------------------------------------------------------------------------------------------------------------
   //bool rpc_server::on_getaddress(const rpc::COMMAND_RPC_GET_ADDRESS::request& req, rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, connection_context& cntx)
   //{
   //  try
