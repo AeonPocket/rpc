@@ -241,6 +241,9 @@ namespace web_wallet
 
       request.txs_hashes.push_back(req.tx_hash);
       bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/gettransactions", request, response, m_http_client);
+      THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "/gettransactions");
+      THROW_WALLET_EXCEPTION_IF(response.status == CORE_RPC_STATUS_BUSY, tools::error::daemon_busy, "/gettransactions");
+      THROW_WALLET_EXCEPTION_IF(response.status != CORE_RPC_STATUS_OK, tools::error::get_out_indices_error, response.status);
       err = interpret_rpc_response(r, response.status);
 
       if (err.empty()) {
@@ -268,6 +271,31 @@ namespace web_wallet
 
               res.tx_extra_pub = string_tools::pod_to_hex(tx_pub_key);
               LOG_PRINT_L0(res.tx_extra_pub);
+
+              crypto::hash tx_hash = cryptonote::get_transaction_hash(tx);
+              res.tx_hash =  string_tools::pod_to_hex(tx_hash);
+
+              BOOST_FOREACH (auto& in, tx.vin)
+              {
+                  if (in.type() != typeid(cryptonote::txin_to_key)) {
+                      continue;
+                  }
+
+                  rpc::transfers transfer;
+                  transfer.amount = boost::get<cryptonote::txin_to_key>(in).amount;
+                  transfer.key_image = string_tools::pod_to_hex(boost::get<cryptonote::txin_to_key>(in).k_image);
+
+                  res.inputs.push_back(transfer);
+              }
+
+              BOOST_FOREACH (const cryptonote::tx_out out, tx.vout)
+              {
+                  rpc::transfers transfer;
+                  transfer.amount = out.amount;
+                  transfer.key_image = string_tools::pod_to_hex(boost::get<cryptonote::txout_to_key>(out.target).key);
+
+                  res.outputs.push_back(transfer);
+              }
           } else {
               return false;
           }

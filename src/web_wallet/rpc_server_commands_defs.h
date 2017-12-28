@@ -56,13 +56,13 @@ namespace rpc
             std::string tx_hash;
             std::string tx_extra_pub;
             std::list<transfers> inputs;
-            std::list<transfers> outpus;
+            std::list<transfers> outputs;
 
             BEGIN_KV_SERIALIZE_MAP()
                 KV_SERIALIZE(tx_hash)
                 KV_SERIALIZE(tx_extra_pub)
                 KV_SERIALIZE(inputs)
-                KV_SERIALIZE(outpus)
+                KV_SERIALIZE(outputs)
             END_KV_SERIALIZE_MAP()
         };
     };
