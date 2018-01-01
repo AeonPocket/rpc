@@ -158,6 +158,7 @@ namespace tools
     void refresh(uint64_t start_height, size_t & blocks_fetched, bool& received_money);
     bool refresh(size_t & blocks_fetched, bool& received_money, bool& ok);
     void refresh_from_local_bc(std::list<std::string>& txs_hashes);
+    void update_wallet(transfer_details td, cryptonote::transaction tx, crypto::public_key tx_pub_key, size_t o);
 
     uint64_t balance();
     uint64_t unlocked_balance();

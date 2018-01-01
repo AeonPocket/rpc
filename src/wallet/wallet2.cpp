@@ -484,9 +484,9 @@ void wallet2::refresh_from_local_bc(std::list<std::string>& txs_hashes)
 		  {
 			  LOG_PRINT_L2("Block is already in blockchain: " << string_tools::pod_to_hex(bl_id));
 		  }
-          if (!txs_hashes.empty()) {
-              break;
-          }
+      if (!txs_hashes.empty()) {
+          break;
+      }
 		  ++current_index;
 	  }
       blocks_fetched += added_blocks;
@@ -512,6 +512,18 @@ void wallet2::refresh_from_local_bc(std::list<std::string>& txs_hashes)
   LOG_PRINT_L1("Refresh done, blocks received: " << blocks_fetched << ", balance: " << print_money(balance()) << ", unlocked: " << print_money(unlocked_balance()));
 }
 //----------------------------------------------------------------------------------------------------
+void wallet2::update_wallet(transfer_details td, cryptonote::transaction tx, crypto::public_key tx_pub_key, size_t o) {
+  cryptonote::keypair in_ephemeral;
+  crypto::key_image keyimage;
+  cryptonote::generate_key_image_helper(m_account.get_keys(), tx_pub_key, o, in_ephemeral, keyimage);
+  THROW_WALLET_EXCEPTION_IF(in_ephemeral.pub != boost::get<cryptonote::txout_to_key>(tx.vout[o].target).key,
+                            error::wallet_internal_error, "key_image generated ephemeral public key not matched with output_key");
+
+  m_transfers.push_back(td);
+  m_key_images[td.m_key_image] = m_transfers.size()-1;
+  LOG_PRINT_L0("Received money: " << print_money(td.amount()) << ", with tx: " << get_transaction_hash(tx));
+}
+//----------------------------------------------------------------------------------------------------
 void wallet2::process_new_blockchain_entry_2(const cryptonote::block& b, cryptonote::block_complete_entry& bche, crypto::hash& bl_id, uint64_t height, std::list<std::string>& tx_hashes)
 {
 	//handle transactions from new block
@@ -524,9 +536,9 @@ void wallet2::process_new_blockchain_entry_2(const cryptonote::block& b, crypton
 		TIME_MEASURE_FINISH(miner_tx_handle_time);
 
 		TIME_MEASURE_START(txs_handle_time);
-		bool found = false;
 		BOOST_FOREACH(auto& txblob, bche.txs)
 		{
+      bool found = false;
 			cryptonote::transaction tx;
 			bool r = parse_and_validate_tx_from_blob(txblob, tx);
 		

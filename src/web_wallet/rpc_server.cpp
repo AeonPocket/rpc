@@ -203,26 +203,29 @@ namespace web_wallet
   {
     try
     {
-        tools::wallet2* m_wallet = new tools::wallet2();
-        create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
-        std::list<std::string> txs_hashes;
-        m_wallet->refresh_from_local_bc(txs_hashes);
+      tools::wallet2* m_wallet = new tools::wallet2();
+      create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
+      std::list<std::string> txs_hashes;
+      m_wallet->refresh_from_local_bc(txs_hashes);
 
 	    tools::wallet2::transfer_container transfers;
 	    m_wallet->get_transfers(transfers);
-        std::ostringstream stream;
-        boost::archive::text_oarchive oa{stream};
-        oa<<transfers;
-        res.transfers = stream.str();
-        res.txs_hashes = txs_hashes;
+      std::ostringstream stream;
+      boost::archive::text_oarchive oa{stream};
+      oa<<transfers;
+      res.transfers = stream.str();
+      res.txs_hashes = txs_hashes;
 
-        std::unordered_map<crypto::key_image, size_t> key_images;
-        m_wallet->get_key_images(key_images);
-        std::ostringstream streamB;
-        boost::archive::text_oarchive ob{streamB};
-        ob<<key_images;
-        res.key_images = streamB.str();
-        delete m_wallet;
+      std::unordered_map<crypto::key_image, size_t> key_images;
+      m_wallet->get_key_images(key_images);
+      std::ostringstream streamB;
+      boost::archive::text_oarchive ob{streamB};
+      ob<<key_images;
+      res.key_images = streamB.str();
+
+      res.account_create_time = m_wallet->get_account().get_createtime();
+      res.local_bc_height = m_wallet->get_blockchain_current_height();
+      delete m_wallet;
     }
     catch (std::exception& e)
     {
@@ -303,6 +306,91 @@ namespace web_wallet
           er.message = err;
       }
       return true;
+  }
+  ////------------------------------------------------------------------------------------------------------------------------------
+  bool rpc_server::on_update_wallet(const rpc::COMMAND_RPC_UPDATE_WALLET::request &req, rpc::COMMAND_RPC_UPDATE_WALLET::response &res, epee::json_rpc::error &er, connection_context &cntx)
+  {
+    cryptonote::transaction tx;
+    crypto::public_key tx_pub_key;
+    tools::wallet2* m_wallet = new tools::wallet2();
+    create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
+
+    std::string err;
+    cryptonote::COMMAND_RPC_GET_TRANSACTIONS::request request1 = boost::value_initialized<cryptonote::COMMAND_RPC_GET_TRANSACTIONS::request>();
+    cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response response1 = boost::value_initialized<cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response>();
+
+    request1.txs_hashes.push_back(req.txid);
+    bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/gettransactions", request1, response1, m_http_client);
+    THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "/gettransactions");
+    THROW_WALLET_EXCEPTION_IF(response1.status == CORE_RPC_STATUS_BUSY, tools::error::daemon_busy, "/gettransactions");
+    THROW_WALLET_EXCEPTION_IF(response1.status != CORE_RPC_STATUS_OK, tools::error::get_out_indices_error, response1.status);
+    err = interpret_rpc_response(r, response1.status);
+
+    if (err.empty()) {
+      if (response1.txs_as_hex.size() == 1) {
+        cryptonote::blobdata txblob;
+        string_tools::parse_hexstr_to_binbuff(response1.txs_as_hex.front(), txblob);
+        bool r = parse_and_validate_tx_from_blob(txblob, tx);
+
+        std::vector<cryptonote::tx_extra_field> tx_extra_fields;
+        if(!parse_tx_extra(tx.extra, tx_extra_fields))
+        {
+          // Extra may only be partially parsed, it's OK if tx_extra_fields contains public key
+          LOG_PRINT_L0("Transaction extra has unsupported format: " << get_transaction_hash(tx));
+          return false;
+        }
+
+        cryptonote::tx_extra_pub_key pub_key_field;
+        if(!find_tx_extra_field_by_type(tx_extra_fields, pub_key_field))
+        {
+          LOG_PRINT_L0("Public key wasn't found in the transaction extra. Skipping transaction " << get_transaction_hash(tx));
+          return false;
+        }
+
+        tx_pub_key = pub_key_field.pub_key;
+      }
+    } else {
+      er.message = err;
+    }
+
+    cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::request request = AUTO_VAL_INIT(request);
+    cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::response response = AUTO_VAL_INIT(response);
+    string_tools::hex_to_pod(req.txid, request.txid);
+    r = net_utils::invoke_http_bin_remote_command2(m_daemon_address + "/get_o_indexes.bin", request, response, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+    THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "get_o_indexes.bin");
+    THROW_WALLET_EXCEPTION_IF(response.status == CORE_RPC_STATUS_BUSY, tools::error::daemon_busy, "get_o_indexes.bin");
+    THROW_WALLET_EXCEPTION_IF(response.status != CORE_RPC_STATUS_OK, tools::error::get_out_indices_error, response.status);
+
+    BOOST_FOREACH(auto& transfer, req.outputs)
+    {
+      tools::wallet2::transfer_details td = boost::value_initialized<tools::wallet2::transfer_details>();
+      td.m_block_height = m_wallet->get_blockchain_current_height();
+      td.m_internal_output_index = transfer.internal_index;
+      td.m_global_output_index = response.o_indexes[transfer.internal_index];
+      td.m_tx = tx;
+      td.m_spent = false;
+      string_tools::hex_to_pod(transfer.key_image, td.m_key_image);
+      m_wallet->update_wallet(td, tx, tx_pub_key, transfer.internal_index);
+    }
+
+    tools::wallet2::transfer_container transfers;
+    m_wallet->get_transfers(transfers);
+    std::ostringstream stream;
+    boost::archive::text_oarchive oa{stream};
+    oa<<transfers;
+    res.transfers = stream.str();
+
+    std::unordered_map<crypto::key_image, size_t> key_images;
+    m_wallet->get_key_images(key_images);
+    std::ostringstream streamB;
+    boost::archive::text_oarchive ob{streamB};
+    ob<<key_images;
+    res.key_images = streamB.str();
+
+    res.account_create_time = m_wallet->get_account().get_createtime();
+    res.local_bc_height = m_wallet->get_blockchain_current_height();
+    delete m_wallet;
+    return true;
   }
   ////------------------------------------------------------------------------------------------------------------------------------
   //bool rpc_server::on_getaddress(const rpc::COMMAND_RPC_GET_ADDRESS::request& req, rpc::COMMAND_RPC_GET_ADDRESS::response& res, epee::json_rpc::error& er, connection_context& cntx)

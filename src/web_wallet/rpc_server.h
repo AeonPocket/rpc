@@ -35,6 +35,7 @@ namespace web_wallet
         MAP_JON_RPC_WE("refresh",            on_refresh,            rpc::COMMAND_RPC_REFRESH)
         MAP_JON_RPC_WE("transfer",           on_transfer,           rpc::COMMAND_RPC_TRANSFER)
         MAP_JON_RPC_WE("get_transaction",    on_get_transaction,    rpc::COMMAND_RPC_TRANSACTION_FULL)
+        MAP_JON_RPC_WE("update_wallet",      on_update_wallet,      rpc::COMMAND_RPC_UPDATE_WALLET)
         MAP_JON_RPC_WE("incoming_transfers", on_incoming_transfers, rpc::COMMAND_RPC_INCOMING_TRANSFERS)
         MAP_JON_RPC_WE("bc_height",          get_blockchain_height, rpc::COMMAND_BC_HEIGHT)
       END_JSON_RPC_MAP()
@@ -42,11 +43,12 @@ namespace web_wallet
 
       //json_rpc
       bool on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er, connection_context& cntx);
-	  bool on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx);
+	    bool on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx);
       bool on_refresh(const rpc::COMMAND_RPC_REFRESH::request& req, rpc::COMMAND_RPC_REFRESH::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx);
       bool validate_transfer(const std::list<rpc::transfer_destination> destinations, const std::string payment_id, std::vector<cryptonote::tx_destination_entry>& dsts, std::vector<uint8_t>& extra, epee::json_rpc::error& er);
       bool on_transfer(const rpc::COMMAND_RPC_TRANSFER::request& req, rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool on_get_transaction(const rpc::COMMAND_RPC_TRANSACTION_FULL::request& req, rpc::COMMAND_RPC_TRANSACTION_FULL::response& res, epee::json_rpc::error& er, connection_context& cntx);
+      bool on_update_wallet(const rpc::COMMAND_RPC_UPDATE_WALLET::request& req, rpc::COMMAND_RPC_UPDATE_WALLET::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er, connection_context& cntx);
 
       bool handle_command_line(const boost::program_options::variables_map& vm);

@@ -16,6 +16,7 @@ namespace rpc
   {
       uint64_t amount;
       uint64_t global_index;
+      uint64_t internal_index;
       std::string tx_hash;
       std::string key_image;
 
@@ -23,6 +24,7 @@ namespace rpc
           KV_SERIALIZE(amount)
           KV_SERIALIZE(key_image)
           KV_SERIALIZE(global_index)
+          KV_SERIALIZE(internal_index)
           KV_SERIALIZE(tx_hash)
       END_KV_SERIALIZE_MAP()
   };
@@ -44,27 +46,27 @@ namespace rpc
 
     struct COMMAND_RPC_TRANSACTION_FULL
     {
-        struct request {
-            std::string tx_hash;
+      struct request {
+        std::string tx_hash;
 
-            BEGIN_KV_SERIALIZE_MAP()
-                KV_SERIALIZE(tx_hash)
-            END_KV_SERIALIZE_MAP()
-        };
+        BEGIN_KV_SERIALIZE_MAP()
+          KV_SERIALIZE(tx_hash)
+        END_KV_SERIALIZE_MAP()
+      };
 
-        struct response {
-            std::string tx_hash;
-            std::string tx_extra_pub;
-            std::list<transfers> inputs;
-            std::list<transfers> outputs;
+      struct response {
+        std::string tx_hash;
+        std::string tx_extra_pub;
+        std::list<transfers> inputs;
+        std::list<transfers> outputs;
 
-            BEGIN_KV_SERIALIZE_MAP()
-                KV_SERIALIZE(tx_hash)
-                KV_SERIALIZE(tx_extra_pub)
-                KV_SERIALIZE(inputs)
-                KV_SERIALIZE(outputs)
-            END_KV_SERIALIZE_MAP()
-        };
+        BEGIN_KV_SERIALIZE_MAP()
+          KV_SERIALIZE(tx_hash)
+          KV_SERIALIZE(tx_extra_pub)
+          KV_SERIALIZE(inputs)
+          KV_SERIALIZE(outputs)
+        END_KV_SERIALIZE_MAP()
+      };
     };
 
   struct COMMAND_RPC_SET_WALLET
@@ -99,29 +101,46 @@ namespace rpc
     };
   };
 
-  // struct COMMAND_RPC_CREATE_WALLET
-  // {
-  //   struct request
-  //   {
-  //     BEGIN_KV_SERIALIZE_MAP()
-  //     END_KV_SERIALIZE_MAP()
-  //   };
+  struct COMMAND_RPC_UPDATE_WALLET
+  {
+    struct request
+    {
+      std::string address;
+      std::string view_key;
+      uint64_t account_create_time;
+      uint64_t local_bc_height;
+      std::string transfers;
+      std::string key_images;
+      std::string txid;
+      std::list<rpc::transfers> outputs;
 
-  //   struct response
-  //   {
-  //     std::string seed;
-  //     uint64_t account_create_time;
-  //     uint64_t local_bc_height;
-  //     std::string transfers;
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(address)
+        KV_SERIALIZE(view_key)
+        KV_SERIALIZE(account_create_time)
+        KV_SERIALIZE(local_bc_height)
+        KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
+        KV_SERIALIZE(txid)
+        KV_SERIALIZE(outputs)
+      END_KV_SERIALIZE_MAP()
+    };
 
-  //     BEGIN_KV_SERIALIZE_MAP()
-  //       KV_SERIALIZE(seed)
-  //       KV_SERIALIZE(account_create_time)
-  //       KV_SERIALIZE(local_bc_height)
-  //       KV_SERIALIZE(transfers)
-  //     END_KV_SERIALIZE_MAP()
-  //   };
-  // };
+    struct response
+    {
+      uint64_t account_create_time;
+      uint64_t local_bc_height;
+      std::string transfers;
+      std::string key_images;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(account_create_time)
+        KV_SERIALIZE(local_bc_height)
+        KV_SERIALIZE(transfers)
+        KV_SERIALIZE(key_images)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
 
   struct COMMAND_RPC_GET_BALANCE
   {
@@ -191,11 +210,15 @@ namespace rpc
     {
       std::list<std::string> txs_hashes;
       std::string transfers;
-	  std::string key_images;
+	    std::string key_images;
+      uint64_t account_create_time;
+      uint64_t local_bc_height;
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(txs_hashes)
         KV_SERIALIZE(transfers)
         KV_SERIALIZE(key_images)
+        KV_SERIALIZE(account_create_time)
+        KV_SERIALIZE(local_bc_height)
       END_KV_SERIALIZE_MAP()
     };
   };
