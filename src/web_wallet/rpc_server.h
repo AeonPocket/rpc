@@ -38,6 +38,7 @@ namespace web_wallet
         MAP_JON_RPC_WE("update_wallet",      on_update_wallet,      rpc::COMMAND_RPC_UPDATE_WALLET)
         MAP_JON_RPC_WE("incoming_transfers", on_incoming_transfers, rpc::COMMAND_RPC_INCOMING_TRANSFERS)
         MAP_JON_RPC_WE("bc_height",          get_blockchain_height, rpc::COMMAND_BC_HEIGHT)
+        MAP_JON_RPC_WE("send_raw_tx",        on_send_raw_tx,        rpc::COMMAND_RPC_SEND_RAW_TX)
       END_JSON_RPC_MAP()
     END_URI_MAP2()
 
@@ -50,6 +51,7 @@ namespace web_wallet
       bool on_get_transaction(const rpc::COMMAND_RPC_TRANSACTION_FULL::request& req, rpc::COMMAND_RPC_TRANSACTION_FULL::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool on_update_wallet(const rpc::COMMAND_RPC_UPDATE_WALLET::request& req, rpc::COMMAND_RPC_UPDATE_WALLET::response& res, epee::json_rpc::error& er, connection_context& cntx);
       bool on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er, connection_context& cntx);
+      bool on_send_raw_tx(const rpc::COMMAND_RPC_SEND_RAW_TX::request& req, rpc::COMMAND_RPC_SEND_RAW_TX::response& res, epee::json_rpc::error& er, connection_context& cntx);
 
       bool handle_command_line(const boost::program_options::variables_map& vm);
 

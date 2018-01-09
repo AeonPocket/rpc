@@ -505,6 +505,28 @@ namespace rpc
       END_KV_SERIALIZE_MAP()
     };
   };
+
+  struct COMMAND_RPC_SEND_RAW_TX
+  {
+    struct request
+    {
+      std::string tx_as_hex;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(tx_as_hex)
+      END_KV_SERIALIZE_MAP()
+    };
+
+
+    struct response
+    {
+      std::string status;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(status)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
 }
 }
 

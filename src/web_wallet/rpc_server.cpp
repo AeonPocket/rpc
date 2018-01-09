@@ -512,6 +512,18 @@ namespace web_wallet
       er.message = err;
     return true;
   }
+  //----------------------------------------------------------------------------------------------------
+  bool rpc_server::on_send_raw_tx(const rpc::COMMAND_RPC_SEND_RAW_TX::request& req, rpc::COMMAND_RPC_SEND_RAW_TX::response& res, epee::json_rpc::error& er, connection_context& cntx)
+  {
+    cryptonote::COMMAND_RPC_SEND_RAW_TX::request request;
+    request.tx_as_hex = req.tx_as_hex;
+    cryptonote::COMMAND_RPC_SEND_RAW_TX::response daemon_send_resp;
+    bool r = epee::net_utils::invoke_http_json_remote_command2(m_daemon_address + "/sendrawtransaction", req, daemon_send_resp, m_http_client, 200000);
+    THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "sendrawtransaction");
+
+    res.status = daemon_send_resp.status;
+    return true;
+  }
   ////------------------------------------------------------------------------------------------------------------------------------
   //bool rpc_server::on_transfer_split(const rpc::COMMAND_RPC_TRANSFER_SPLIT::request& req, rpc::COMMAND_RPC_TRANSFER_SPLIT::response& res, epee::json_rpc::error& er, connection_context& cntx)
   //{
