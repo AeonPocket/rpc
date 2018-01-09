@@ -457,73 +457,40 @@ namespace web_wallet
   {
 
     tools::wallet2* m_wallet = new tools::wallet2();
-    create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, res.key_images);
+    create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
 
-   std::vector<cryptonote::tx_destination_entry> dsts;
-   std::vector<uint8_t> extra;
+    std::vector<cryptonote::tx_destination_entry> dsts;
+    std::vector<uint8_t> extra;
 
-   // validate the transfer requested and populate dsts & extra
-   if (!validate_transfer(req.destinations, req.payment_id, dsts, extra, er))
-   {
-     return false;
-   }
+    // validate the transfer requested and populate dsts & extra
+    if (!validate_transfer(req.destinations, req.payment_id, dsts, extra, er)) {
+      return false;
+    }
 
-   try
-   {
-     std::vector<tools::wallet2::pending_tx> ptx_vector = m_wallet->create_transactions(dsts, req.mixin, req.unlock_time, req.fee, extra);
+    std::vector<cryptonote::tx_source_entry> sources;
+    sources = m_wallet->get_transaction_sources(dsts, req.mixin, req.unlock_time, req.fee, extra, tools::detail::digit_split_strategy,
+                                                tools::tx_dust_policy(req.fee));
 
-     // reject proposed transactions if there are more than one.  see on_transfer_split below.
-     if (ptx_vector.size() != 1)
-     {
-       er.code = WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR;
-       er.message = "Transaction would be too large.  try /transfer_split.";
-       return false;
-     }
+    for (auto &source: sources) {
+      rpc::COMMAND_RPC_TRANSFER::source src;
+      src.real_out = source.real_output;
+      src.amount = source.amount;
+      src.real_out_tx_key = string_tools::pod_to_hex(source.real_out_tx_key);
+      src.real_out_in_tx = source.real_output_in_tx_index;
 
-     m_wallet->commit_tx(ptx_vector);
+      for (auto &output: source.outputs) {
+        rpc::COMMAND_RPC_TRANSFER::output out;
+        out.index = output.first;
+        out.key = string_tools::pod_to_hex(output.second);
 
-     // populate response with tx hash
-     res.tx_hash = boost::lexical_cast<std::string>(cryptonote::get_transaction_hash(ptx_vector.back().tx));
+        src.outputs.push_back(out);
+      }
 
-      tools::wallet2::transfer_container transfers;
-      m_wallet->get_transfers(transfers);
-      std::ostringstream stream;
-      boost::archive::text_oarchive oa{stream};
-      oa<<transfers;
-      res.transfers = stream.str();
+      res.sources.push_back(src);
+    }
 
-      std::unordered_map<crypto::key_image, size_t> key_images;
-      m_wallet->get_key_images(key_images);
-      std::ostringstream streamB;
-      boost::archive::text_oarchive ob{streamB};
-      ob<<key_images;
-      res.key_images = streamB.str();
-
-      res.account_create_time = m_wallet->get_account().get_createtime();
-      res.local_bc_height = m_wallet->get_blockchain_current_height();
-      delete m_wallet;
-     return true;
-   }
-   catch (const tools::error::daemon_busy& e)
-   {
-     er.code = WALLET_RPC_ERROR_CODE_DAEMON_IS_BUSY;
-     er.message = e.what();
-     return false;
-   }
-   catch (const std::exception& e)
-   {
-     er.code = WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR;
-     er.message = e.what();
-     return false;
-   }
-   catch (...)
-   {
-     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-     er.message = "WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR";
-     return false;
-   }
-	 delete m_wallet;
-   return true;
+    delete m_wallet;
+    return true;
   }
   //----------------------------------------------------------------------------------------------------
   uint64_t rpc_server::get_daemon_blockchain_height(std::string& err)

@@ -281,7 +281,6 @@ namespace rpc
       std::string payment_id;
       std::string address;
       std::string view_key;
-      std::string spend_key;
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
@@ -295,7 +294,6 @@ namespace rpc
         KV_SERIALIZE(payment_id)
         KV_SERIALIZE(address)
         KV_SERIALIZE(view_key)
-        KV_SERIALIZE(spend_key)
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)
@@ -303,16 +301,42 @@ namespace rpc
       END_KV_SERIALIZE_MAP()
     };
 
+    struct output {
+      uint64_t index;
+      std::string key;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(index)
+        KV_SERIALIZE(key)
+      END_KV_SERIALIZE_MAP()
+    };
+
+    struct source {
+      std::list<output> outputs;
+      uint64_t real_out;
+      uint64_t amount;
+      std::string real_out_tx_key;
+      uint64_t real_out_in_tx;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(outputs)
+        KV_SERIALIZE(real_out)
+        KV_SERIALIZE(amount)
+        KV_SERIALIZE(real_out_tx_key)
+        KV_SERIALIZE(real_out_in_tx)
+      END_KV_SERIALIZE_MAP()
+    };
+
     struct response
     {
-      std::string tx_hash;
+      std::list <source> sources;
       uint64_t account_create_time;
       uint64_t local_bc_height;
       std::string transfers;
       std::string key_images;
 
       BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(tx_hash)
+        KV_SERIALIZE(sources)
         KV_SERIALIZE(account_create_time)
         KV_SERIALIZE(local_bc_height)
         KV_SERIALIZE(transfers)

@@ -1,6 +1,6 @@
 /home/pushkar/Documents/clion-2017.3/bin/cmake/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/pushkar/Documents/aur/aeon
--- The C compiler identification is GNU 7.2.0
--- The CXX compiler identification is GNU 7.2.0
+-- The C compiler identification is GNU 7.2.1
+-- The CXX compiler identification is GNU 7.2.1
 -- Check for working C compiler: /usr/bin/cc
 -- Check for working C compiler: /usr/bin/cc -- works
 -- Detecting C compiler ABI info
@@ -22,7 +22,88 @@
 -- Looking for pthread_create in pthread
 -- Looking for pthread_create in pthread - found
 -- Found Threads: TRUE  
--- Boost version: 1.65.1
+CMake Warning at /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:786 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:892 (_Boost_COMPONENT_DEPENDENCIES)
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:1523 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:106 (find_package)
+
+
+CMake Warning at /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:786 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:892 (_Boost_COMPONENT_DEPENDENCIES)
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:1523 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:106 (find_package)
+
+
+CMake Warning at /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:786 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:892 (_Boost_COMPONENT_DEPENDENCIES)
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:1523 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:106 (find_package)
+
+
+CMake Warning at /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:786 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:892 (_Boost_COMPONENT_DEPENDENCIES)
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:1523 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:106 (find_package)
+
+
+CMake Warning at /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:786 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:892 (_Boost_COMPONENT_DEPENDENCIES)
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:1523 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:106 (find_package)
+
+
+CMake Warning at /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:786 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:892 (_Boost_COMPONENT_DEPENDENCIES)
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:1523 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:106 (find_package)
+
+
+CMake Warning at /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:786 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:892 (_Boost_COMPONENT_DEPENDENCIES)
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:1523 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:106 (find_package)
+
+
+CMake Warning at /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:786 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:892 (_Boost_COMPONENT_DEPENDENCIES)
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:1523 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:106 (find_package)
+
+
+CMake Warning at /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:786 (message):
+  New Boost version may have incorrect or missing dependencies and imported
+  targets
+Call Stack (most recent call first):
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:892 (_Boost_COMPONENT_DEPENDENCIES)
+  /home/pushkar/Documents/clion-2017.3/bin/cmake/share/cmake-3.9/Modules/FindBoost.cmake:1523 (_Boost_MISSING_DEPENDENCIES)
+  CMakeLists.txt:106 (find_package)
+
+
+-- Boost version: 1.66.0
 -- Found the following Boost libraries:
 --   system
 --   filesystem
@@ -34,7 +115,7 @@
 --   program_options
 --   atomic
 -- Found Git: /usr/bin/git
--- Found PythonInterp: /usr/bin/python (found version "3.6.3") 
+-- Found PythonInterp: /usr/bin/python (found version "3.6.4") 
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /home/pushkar/Documents/aur/aeon/cmake-build-debug
