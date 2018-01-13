@@ -6,7 +6,7 @@
 #include "rpc_server_commands_defs.h"
 #include "web_wallet.h"
 #include "common/command_line.h"
-namespace web_wallet
+namespace aeon_pocket
 {
   /************************************************************************/
   /*                                                                      */
@@ -23,6 +23,7 @@ namespace web_wallet
 	bool set_daemon_address(std::string &daemon_address);
     static void init_options(boost::program_options::options_description& desc);
     bool init(const boost::program_options::variables_map& vm);
+	bool init2(std::string bind_ip, std::string bind_port);
     bool run();
   private:
 

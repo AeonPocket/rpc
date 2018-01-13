@@ -5,7 +5,7 @@
 #include "wallet/wallet_rpc_server_error_codes.h"
 #include "cryptonote_core/account.h"
 #include "wallet/wallet2.h"
-namespace web_wallet
+namespace aeon_pocket 
 {
 namespace rpc
 {

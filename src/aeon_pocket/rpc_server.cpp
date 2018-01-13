@@ -46,7 +46,7 @@ using namespace epee;
 #include "wallet/wallet2.h"
 #include "rpc/core_rpc_server_commands_defs.h"
 
-namespace web_wallet
+namespace aeon_pocket
 {
   //-----------------------------------------------------------------------------------
   const command_line::arg_descriptor<std::string> rpc_server::arg_rpc_bind_port = {"rpc-bind-port", "Starts wallet as rpc server for wallet operations, sets bind port for server", "11191"};
@@ -87,6 +87,14 @@ namespace web_wallet
     bool r = handle_command_line(vm);
     CHECK_AND_ASSERT_MES(r, false, "Failed to process command line in core_rpc_server");
     return epee::http_server_impl_base<rpc_server, connection_context>::init(m_port, m_bind_ip);
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
+  bool rpc_server::init2(std::string bind_ip, std::string bind_port )
+  {
+	  m_bind_ip = bind_ip;
+	  m_port = bind_port;
+	  m_net_server.set_threads_prefix("RPC");
+	  return epee::http_server_impl_base<rpc_server, connection_context>::init(m_port, m_bind_ip);
   }
   //------------------------------------------------------------------------------------------------------------------------------
   bool rpc_server::set_daemon_address(std::string& daemon_address) {
@@ -706,7 +714,7 @@ namespace web_wallet
        {
          transfers_found = true;
        }
-       web_wallet::rpc::transfer_details rpc_transfers;
+       aeon_pocket::rpc::transfer_details rpc_transfers;
        rpc_transfers.amount       = td.amount();
        rpc_transfers.spent        = td.m_spent;
        rpc_transfers.global_index = td.m_global_output_index;
