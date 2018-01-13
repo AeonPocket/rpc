@@ -37,7 +37,7 @@ using namespace epee;
 #include "rpc_server.h"
 #include "common/command_line.h"
 #include "cryptonote_core/cryptonote_format_utils.h"
-#include "cryptonote_core/account.h"
+#include "account.h"
 #include "rpc_server_commands_defs.h"
 #include "misc_language.h"
 #include "string_tools.h"
@@ -506,6 +506,7 @@ namespace aeon_pocket
     cryptonote::COMMAND_RPC_GET_HEIGHT::request req;
     cryptonote::COMMAND_RPC_GET_HEIGHT::response res = boost::value_initialized<cryptonote::COMMAND_RPC_GET_HEIGHT::response>();
     bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/getheight", req, res, m_http_client);
+    THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "/getheight");
     err = interpret_rpc_response(r, res.status);
     return res.height;
   }

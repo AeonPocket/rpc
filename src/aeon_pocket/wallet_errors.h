@@ -617,7 +617,7 @@ namespace aeon_pocket
 #define STRINGIZE_DETAIL(x) #x
 #define STRINGIZE(x) STRINGIZE_DETAIL(x)
 
-#define THROW_WALLET_EXCEPTION_IF(cond, err_type, ...)                                                      \
+#define THROW_AEON_POCKET_EXCEPTION_IF(cond, err_type, ...)                                                      \
   if (cond)                                                                                                 \
   {                                                                                                         \
     LOG_ERROR(#cond << ". THROW EXCEPTION: " << #err_type);                                                 \

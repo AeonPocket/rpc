@@ -33,39 +33,25 @@
 #include "cryptonote_core/cryptonote_basic.h"
 #include "crypto/crypto.h"
 #include "serialization/keyvalue_serialization.h"
+#include "cryptonote_core/account.h"
 
-namespace cryptonote
+namespace aeon_pocket
 {
-
-  struct account_keys
-  {
-    account_public_address m_account_address;
-    crypto::secret_key   m_spend_secret_key;
-    crypto::secret_key   m_view_secret_key;
-
-    BEGIN_KV_SERIALIZE_MAP()
-      KV_SERIALIZE(m_account_address)
-      KV_SERIALIZE_VAL_POD_AS_BLOB_FORCE(m_spend_secret_key)
-      KV_SERIALIZE_VAL_POD_AS_BLOB_FORCE(m_view_secret_key)
-    END_KV_SERIALIZE_MAP()
-  };
 
   /************************************************************************/
   /*                                                                      */
   /************************************************************************/
-  class account_base
+  class account_base_ext
   {
   public:
-    account_base();
+    account_base_ext();
     crypto::secret_key generate(const crypto::secret_key& recovery_key = crypto::secret_key(), bool recover = false, bool two_random = false);
-    const account_keys& get_keys() const;
+    void generate(cryptonote::account_public_address address, crypto::secret_key view_key);
+    const cryptonote::account_keys& get_keys() const;
     std::string get_public_address_str();
 
     uint64_t get_createtime() const { return m_creation_timestamp; }
     void set_createtime(uint64_t val) { m_creation_timestamp = val; }
-
-    bool load(const std::string& file_path);
-    bool store(const std::string& file_path);
 
     template <class t_archive>
     inline void serialize(t_archive &a, const unsigned int /*ver*/)
@@ -81,7 +67,7 @@ namespace cryptonote
 
   private:
     void set_null();
-    account_keys m_keys;
+    cryptonote::account_keys m_keys;
     uint64_t m_creation_timestamp;
   };
 }

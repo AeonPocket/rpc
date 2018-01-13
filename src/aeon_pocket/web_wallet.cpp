@@ -123,7 +123,7 @@ namespace aeon_pocket
 
 		crypto::public_key tx_pub_key = pub_key_field.pub_key;
 		bool r = lookup_acc_outs(m_account.get_keys(), tx, tx_pub_key, outs, tx_money_got_in_outs);
-		THROW_WALLET_EXCEPTION_IF(!r, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
 
 		if (!outs.empty() && tx_money_got_in_outs)
 		{
@@ -133,16 +133,16 @@ namespace aeon_pocket
 			cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::response res = AUTO_VAL_INIT(res);
 			req.txid = get_transaction_hash(tx);
 			bool r = net_utils::invoke_http_bin_remote_command2(m_daemon_address + "/get_o_indexes.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
-			THROW_WALLET_EXCEPTION_IF(!r, aeon_pocket::error::no_connection_to_daemon, "get_o_indexes.bin");
-			THROW_WALLET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "get_o_indexes.bin");
-			THROW_WALLET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_out_indices_error, res.status);
-			THROW_WALLET_EXCEPTION_IF(res.o_indexes.size() != tx.vout.size(), error::wallet_internal_error,
+			THROW_AEON_POCKET_EXCEPTION_IF(!r, aeon_pocket::error::no_connection_to_daemon, "get_o_indexes.bin");
+			THROW_AEON_POCKET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "get_o_indexes.bin");
+			THROW_AEON_POCKET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_out_indices_error, res.status);
+			THROW_AEON_POCKET_EXCEPTION_IF(res.o_indexes.size() != tx.vout.size(), error::wallet_internal_error,
 				"transactions outputs size=" + std::to_string(tx.vout.size()) +
 				" not match with COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES response size=" + std::to_string(res.o_indexes.size()));
 
 			BOOST_FOREACH(size_t o, outs)
 			{
-				THROW_WALLET_EXCEPTION_IF(tx.vout.size() <= o, error::wallet_internal_error, "wrong out in transaction: internal index=" +
+				THROW_AEON_POCKET_EXCEPTION_IF(tx.vout.size() <= o, error::wallet_internal_error, "wrong out in transaction: internal index=" +
 					std::to_string(o) + ", total_outs=" + std::to_string(tx.vout.size()));
 
 				m_transfers.push_back(boost::value_initialized<transfer_details>());
@@ -154,7 +154,7 @@ namespace aeon_pocket
 				td.m_spent = false;
 				cryptonote::keypair in_ephemeral;
 				cryptonote::generate_key_image_helper(m_account.get_keys(), tx_pub_key, o, in_ephemeral, td.m_key_image);
-				THROW_WALLET_EXCEPTION_IF(in_ephemeral.pub != boost::get<cryptonote::txout_to_key>(tx.vout[o].target).key,
+				THROW_AEON_POCKET_EXCEPTION_IF(in_ephemeral.pub != boost::get<cryptonote::txout_to_key>(tx.vout[o].target).key,
 					error::wallet_internal_error, "key_image generated ephemeral public key not matched with output_key");
 
 				m_key_images[td.m_key_image] = m_transfers.size() - 1;
@@ -227,7 +227,7 @@ namespace aeon_pocket
 
 		crypto::public_key tx_pub_key = pub_key_field.pub_key;
 		bool r = lookup_acc_outs(m_account.get_keys(), tx, tx_pub_key, outs, tx_money_got_in_outs);
-		THROW_WALLET_EXCEPTION_IF(!r, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
 
 		uint64_t tx_money_spent_in_ins = 0;
 		// check all outputs for spending (compare key images)
@@ -297,7 +297,7 @@ namespace aeon_pocket
 			{
 				cryptonote::transaction tx;
 				bool r = parse_and_validate_tx_from_blob(txblob, tx);
-				THROW_WALLET_EXCEPTION_IF(!r, error::tx_parse_error, txblob);
+				THROW_AEON_POCKET_EXCEPTION_IF(!r, error::tx_parse_error, txblob);
 				process_new_transaction(tx, height);
 			}
 			TIME_MEASURE_FINISH(txs_handle_time);
@@ -350,16 +350,16 @@ namespace aeon_pocket
 		get_short_chain_history(req.block_ids);
 		req.start_height = start_height;
 		bool r = net_utils::invoke_http_bin_remote_command2(m_daemon_address + "/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
-		THROW_WALLET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblocks.bin");
-		THROW_WALLET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblocks.bin");
-		THROW_WALLET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_blocks_error, res.status);
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblocks.bin");
+		THROW_AEON_POCKET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblocks.bin");
+		THROW_AEON_POCKET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_blocks_error, res.status);
 
 		size_t current_index = res.start_height;
 		BOOST_FOREACH(auto& bl_entry, res.blocks)
 		{
 			cryptonote::block bl;
 			r = cryptonote::parse_and_validate_block_from_blob(bl_entry.block, bl);
-			THROW_WALLET_EXCEPTION_IF(!r, error::block_parse_error, bl_entry.block);
+			THROW_AEON_POCKET_EXCEPTION_IF(!r, error::block_parse_error, bl_entry.block);
 
 			crypto::hash bl_id = get_block_hash(bl);
 			if (current_index >= m_blockchain.size())
@@ -370,7 +370,7 @@ namespace aeon_pocket
 			else if (bl_id != m_blockchain[current_index])
 			{
 				//split detected here !!!
-				THROW_WALLET_EXCEPTION_IF(current_index == res.start_height, error::wallet_internal_error,
+				THROW_AEON_POCKET_EXCEPTION_IF(current_index == res.start_height, error::wallet_internal_error,
 					"wrong daemon response: split starts from the first block in response " + string_tools::pod_to_hex(bl_id) +
 					" (height " + std::to_string(res.start_height) + "), local block id at this height: " +
 					string_tools::pod_to_hex(m_blockchain[current_index]));
@@ -453,9 +453,9 @@ namespace aeon_pocket
 				get_short_chain_history(req.block_ids);
 				req.start_height = m_local_bc_height;
 				bool r = net_utils::invoke_http_bin_remote_command2(m_daemon_address + "/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
-				THROW_WALLET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblocks.bin");
-				THROW_WALLET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblocks.bin");
-				THROW_WALLET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_blocks_error, res.status);
+				THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblocks.bin");
+				THROW_AEON_POCKET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblocks.bin");
+				THROW_AEON_POCKET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_blocks_error, res.status);
 
 				size_t current_index = res.start_height;
 				BOOST_FOREACH(auto& bl_entry, res.blocks)
@@ -463,7 +463,7 @@ namespace aeon_pocket
 					cryptonote::block bl;
 					cryptonote::transaction tx;
 					r = cryptonote::parse_and_validate_block_from_blob(bl_entry.block, bl);
-					THROW_WALLET_EXCEPTION_IF(!r, error::block_parse_error, bl_entry.block);
+					THROW_AEON_POCKET_EXCEPTION_IF(!r, error::block_parse_error, bl_entry.block);
 
 					crypto::hash bl_id = get_block_hash(bl);
 					if (current_index >= m_blockchain.size())
@@ -475,7 +475,7 @@ namespace aeon_pocket
 					else if (bl_id != m_blockchain[current_index])
 					{
 						//split detected here !!!
-						THROW_WALLET_EXCEPTION_IF(current_index == res.start_height, error::wallet_internal_error,
+						THROW_AEON_POCKET_EXCEPTION_IF(current_index == res.start_height, error::wallet_internal_error,
 							"wrong daemon response: split starts from the first block in response " + string_tools::pod_to_hex(bl_id) +
 							" (height " + std::to_string(res.start_height) + "), local block id at this height: " +
 							string_tools::pod_to_hex(m_blockchain[current_index]));
@@ -519,7 +519,7 @@ namespace aeon_pocket
 		cryptonote::keypair in_ephemeral;
 		crypto::key_image keyimage;
 		cryptonote::generate_key_image_helper(m_account.get_keys(), tx_pub_key, o, in_ephemeral, keyimage);
-		THROW_WALLET_EXCEPTION_IF(in_ephemeral.pub != boost::get<cryptonote::txout_to_key>(tx.vout[o].target).key,
+		THROW_AEON_POCKET_EXCEPTION_IF(in_ephemeral.pub != boost::get<cryptonote::txout_to_key>(tx.vout[o].target).key,
 			error::wallet_internal_error, "key_image generated ephemeral public key not matched with output_key");
 
 		m_transfers.push_back(td);
@@ -545,7 +545,7 @@ namespace aeon_pocket
 				cryptonote::transaction tx;
 				bool r = parse_and_validate_tx_from_blob(txblob, tx);
 
-				THROW_WALLET_EXCEPTION_IF(!r, error::tx_parse_error, txblob);
+				THROW_AEON_POCKET_EXCEPTION_IF(!r, error::tx_parse_error, txblob);
 				process_new_transaction_2(tx, height, found);
 				if (found) {
 					crypto::hash hash = get_transaction_hash(tx);
@@ -594,7 +594,7 @@ namespace aeon_pocket
 		for (size_t i = i_start; i != m_transfers.size(); i++)
 		{
 			auto it_ki = m_key_images.find(m_transfers[i].m_key_image);
-			THROW_WALLET_EXCEPTION_IF(it_ki == m_key_images.end(), error::wallet_internal_error, "key image not found");
+			THROW_AEON_POCKET_EXCEPTION_IF(it_ki == m_key_images.end(), error::wallet_internal_error, "key image not found");
 			m_key_images.erase(it_ki);
 			++transfers_detached;
 		}
@@ -669,9 +669,9 @@ namespace aeon_pocket
 		web_wallet::keys_file_data keys_file_data;
 		std::string buf;
 		bool r = epee::file_io_utils::load_file_to_string(keys_file_name, buf);
-		THROW_WALLET_EXCEPTION_IF(!r, error::file_read_error, keys_file_name);
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::file_read_error, keys_file_name);
 		r = ::serialization::parse_binary(buf, keys_file_data);
-		THROW_WALLET_EXCEPTION_IF(!r, error::wallet_internal_error, "internal error: failed to deserialize \"" + keys_file_name + '\"');
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::wallet_internal_error, "internal error: failed to deserialize \"" + keys_file_name + '\"');
 
 		crypto::chacha8_key key;
 		crypto::generate_chacha8_key(password, key);
@@ -683,7 +683,7 @@ namespace aeon_pocket
 		r = epee::serialization::load_t_from_binary(m_account, account_data);
 		r = r && verify_keys(keys.m_view_secret_key, keys.m_account_address.m_view_public_key);
 		r = r && verify_keys(keys.m_spend_secret_key, keys.m_account_address.m_spend_public_key);
-		THROW_WALLET_EXCEPTION_IF(!r, error::invalid_password);
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::invalid_password);
 	}
 	//----------------------------------------------------------------------------------------------------
 	crypto::secret_key web_wallet::generate(const std::string& wallet_, const std::string& password, const crypto::secret_key& recovery_param, bool recover, bool two_random)
@@ -692,15 +692,15 @@ namespace aeon_pocket
 		prepare_file_names(wallet_);
 
 		boost::system::error_code ignored_ec;
-		THROW_WALLET_EXCEPTION_IF(boost::filesystem::exists(m_wallet_file, ignored_ec), error::file_exists, m_wallet_file);
-		THROW_WALLET_EXCEPTION_IF(boost::filesystem::exists(m_keys_file, ignored_ec), error::file_exists, m_keys_file);
+		THROW_AEON_POCKET_EXCEPTION_IF(boost::filesystem::exists(m_wallet_file, ignored_ec), error::file_exists, m_wallet_file);
+		THROW_AEON_POCKET_EXCEPTION_IF(boost::filesystem::exists(m_keys_file, ignored_ec), error::file_exists, m_keys_file);
 
 		crypto::secret_key retval = m_account.generate(recovery_param, recover, two_random);
 
 		m_account_public_address = m_account.get_keys().m_account_address;
 
 		bool r = store_keys(m_keys_file, password);
-		THROW_WALLET_EXCEPTION_IF(!r, error::file_save_error, m_keys_file);
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::file_save_error, m_keys_file);
 
 		r = file_io_utils::save_string_to_file(m_wallet_file + ".address.txt", m_account.get_public_address_str());
 		if (!r) LOG_PRINT_RED_L0("String with address text not saved");
@@ -757,7 +757,7 @@ namespace aeon_pocket
 
 		boost::system::error_code e;
 		bool exists = boost::filesystem::exists(m_keys_file, e);
-		THROW_WALLET_EXCEPTION_IF(e || !exists, error::file_not_found, m_keys_file);
+		THROW_AEON_POCKET_EXCEPTION_IF(e || !exists, error::file_not_found, m_keys_file);
 
 		load_keys(m_keys_file, password);
 		LOG_PRINT_L0("Loaded wallet keys file, with public address: " << m_account.get_public_address_str());
@@ -771,8 +771,8 @@ namespace aeon_pocket
 			return;
 		}
 		bool r = tools::unserialize_obj_from_file(*this, m_wallet_file);
-		THROW_WALLET_EXCEPTION_IF(!r, error::file_read_error, m_wallet_file);
-		THROW_WALLET_EXCEPTION_IF(
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::file_read_error, m_wallet_file);
+		THROW_AEON_POCKET_EXCEPTION_IF(
 			m_account_public_address.m_spend_public_key != m_account.get_keys().m_account_address.m_spend_public_key ||
 			m_account_public_address.m_view_public_key != m_account.get_keys().m_account_address.m_view_public_key,
 			error::wallet_files_doesnt_correspond, m_keys_file, m_wallet_file);
@@ -794,7 +794,7 @@ namespace aeon_pocket
 		string_tools::hex_to_pod(view_key, m_account_view_key);
 
 		bool c = verify_keys(m_account_view_key, m_account_public_address.m_view_public_key);
-		THROW_WALLET_EXCEPTION_IF(!c, error::invalid_password);
+		THROW_AEON_POCKET_EXCEPTION_IF(!c, error::invalid_password);
 
 		m_account.generate(m_account_public_address, m_account_view_key);
 
@@ -816,7 +816,7 @@ namespace aeon_pocket
 	void web_wallet::store()
 	{
 		bool r = tools::serialize_obj_to_file(*this, m_wallet_file);
-		THROW_WALLET_EXCEPTION_IF(!r, error::file_save_error, m_wallet_file);
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::file_save_error, m_wallet_file);
 	}
 	//----------------------------------------------------------------------------------------------------
 	uint64_t web_wallet::unlocked_balance()
@@ -969,69 +969,6 @@ namespace aeon_pocket
 		utd.m_sent_time = time(NULL);
 		utd.m_tx = tx;
 	}
-	//----------------------------------------------------------------------------------------------------
-	void web_wallet::transfer(const std::vector<cryptonote::tx_destination_entry>& dsts, size_t fake_outputs_count,
-		uint64_t unlock_time, uint64_t fee, const std::vector<uint8_t>& extra, cryptonote::transaction& tx, pending_tx& ptx)
-	{
-		transfer(dsts, fake_outputs_count, unlock_time, fee, extra, detail::digit_split_strategy, tx_dust_policy(fee), tx, ptx);
-	}
-	//----------------------------------------------------------------------------------------------------
-	void web_wallet::transfer(const std::vector<cryptonote::tx_destination_entry>& dsts, size_t fake_outputs_count,
-		uint64_t unlock_time, uint64_t fee, const std::vector<uint8_t>& extra)
-	{
-		cryptonote::transaction tx;
-		pending_tx ptx;
-		transfer(dsts, fake_outputs_count, unlock_time, fee, extra, tx, ptx);
-	}
-
-	namespace {
-		// split_amounts(vector<cryptonote::tx_destination_entry> dsts, size_t num_splits)
-		//
-		// split amount for each dst in dsts into num_splits parts
-		// and make num_splits new vector<crypt...> instances to hold these new amounts
-		std::vector<std::vector<cryptonote::tx_destination_entry>> split_amounts(
-			std::vector<cryptonote::tx_destination_entry> dsts, size_t num_splits)
-		{
-			std::vector<std::vector<cryptonote::tx_destination_entry>> retVal;
-
-			if (num_splits <= 1)
-			{
-				retVal.push_back(dsts);
-				return retVal;
-			}
-
-			// for each split required
-			for (size_t i = 0; i < num_splits; i++)
-			{
-				std::vector<cryptonote::tx_destination_entry> new_dsts;
-
-				// for each destination
-				for (size_t j = 0; j < dsts.size(); j++)
-				{
-					cryptonote::tx_destination_entry de;
-					uint64_t amount;
-
-					amount = dsts[j].amount;
-					amount = amount / num_splits;
-
-					// if last split, add remainder
-					if (i + 1 == num_splits)
-					{
-						amount += dsts[j].amount % num_splits;
-					}
-
-					de.addr = dsts[j].addr;
-					de.amount = amount;
-
-					new_dsts.push_back(de);
-				}
-
-				retVal.push_back(new_dsts);
-			}
-
-			return retVal;
-		}
-	} // anonymous namespace
 
 	  //----------------------------------------------------------------------------------------------------
 	  // take a pending tx and actually send it to the daemon
@@ -1042,9 +979,9 @@ namespace aeon_pocket
 		req.tx_as_hex = epee::string_tools::buff_to_hex_nodelimer(tx_to_blob(ptx.tx));
 		COMMAND_RPC_SEND_RAW_TX::response daemon_send_resp;
 		bool r = epee::net_utils::invoke_http_json_remote_command2(m_daemon_address + "/sendrawtransaction", req, daemon_send_resp, m_http_client, 200000);
-		THROW_WALLET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "sendrawtransaction");
-		THROW_WALLET_EXCEPTION_IF(daemon_send_resp.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "sendrawtransaction");
-		THROW_WALLET_EXCEPTION_IF(daemon_send_resp.status != CORE_RPC_STATUS_OK, error::tx_rejected, ptx.tx, daemon_send_resp.status);
+		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "sendrawtransaction");
+		THROW_AEON_POCKET_EXCEPTION_IF(daemon_send_resp.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "sendrawtransaction");
+		THROW_AEON_POCKET_EXCEPTION_IF(daemon_send_resp.status != CORE_RPC_STATUS_OK, error::tx_rejected, ptx.tx, daemon_send_resp.status);
 
 		add_unconfirmed_tx(ptx.tx, ptx.change_dts.amount);
 
@@ -1065,94 +1002,6 @@ namespace aeon_pocket
 		for (auto & ptx : ptx_vector)
 		{
 			commit_tx(ptx);
-		}
-	}
-
-	//----------------------------------------------------------------------------------------------------
-	// separated the call(s) to web_wallet::transfer into their own function
-	//
-	// this function will make multiple calls to web_wallet::transfer if multiple
-	// transactions will be required
-	std::vector<web_wallet::pending_tx> web_wallet::create_transactions(std::vector<cryptonote::tx_destination_entry> dsts, const size_t fake_outs_count, const uint64_t unlock_time, const uint64_t fee, const std::vector<uint8_t> extra)
-	{
-
-		// failsafe split attempt counter
-		size_t attempt_count = 0;
-
-		for (attempt_count = 1; ; attempt_count++)
-		{
-			auto split_values = split_amounts(dsts, attempt_count);
-
-			// Throw if split_amounts comes back with a vector of size different than it should
-			if (split_values.size() != attempt_count)
-			{
-				throw std::runtime_error("Splitting transactions returned a number of potential tx not equal to what was requested");
-			}
-
-			std::vector<pending_tx> ptx_vector;
-			try
-			{
-				// for each new destination vector (i.e. for each new tx)
-				for (auto & dst_vector : split_values)
-				{
-					cryptonote::transaction tx;
-					pending_tx ptx;
-					transfer(dst_vector, fake_outs_count, unlock_time, fee, extra, tx, ptx);
-					ptx_vector.push_back(ptx);
-
-					// mark transfers to be used as "spent"
-					BOOST_FOREACH(transfer_container::iterator it, ptx.selected_transfers)
-						it->m_spent = true;
-				}
-
-				// if we made it this far, we've selected our transactions.  committing them will mark them spent,
-				// so this is a failsafe in case they don't go through
-				// unmark pending tx transfers as spent
-				for (auto & ptx : ptx_vector)
-				{
-					// mark transfers to be used as not spent
-					BOOST_FOREACH(transfer_container::iterator it2, ptx.selected_transfers)
-						it2->m_spent = false;
-
-				}
-
-				// if we made it this far, we're OK to actually send the transactions
-				return ptx_vector;
-
-			}
-			// only catch this here, other exceptions need to pass through to the calling function
-			catch (const aeon_pocket::error::tx_too_big& e)
-			{
-
-				// unmark pending tx transfers as spent
-				for (auto & ptx : ptx_vector)
-				{
-					// mark transfers to be used as not spent
-					BOOST_FOREACH(transfer_container::iterator it2, ptx.selected_transfers)
-						it2->m_spent = false;
-
-				}
-
-				if (attempt_count >= MAX_SPLIT_ATTEMPTS)
-				{
-					throw;
-				}
-			}
-			catch (...)
-			{
-				// in case of some other exception, make sure any tx in queue are marked unspent again
-
-				// unmark pending tx transfers as spent
-				for (auto & ptx : ptx_vector)
-				{
-					// mark transfers to be used as not spent
-					BOOST_FOREACH(transfer_container::iterator it2, ptx.selected_transfers)
-						it2->m_spent = false;
-
-				}
-
-				throw;
-			}
 		}
 	}
 }

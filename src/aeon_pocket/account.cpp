@@ -46,20 +46,20 @@ using namespace std;
 
 DISABLE_VS_WARNINGS(4244 4345)
 
-  namespace cryptonote
+namespace aeon_pocket
 {
   //-----------------------------------------------------------------
-  account_base::account_base()
+  account_base_ext::account_base_ext()
   {
     set_null();
   }
   //-----------------------------------------------------------------
-  void account_base::set_null()
+  void account_base_ext::set_null()
   {
-    m_keys = account_keys();
+    m_keys = cryptonote::account_keys();
   }
   //-----------------------------------------------------------------
-  crypto::secret_key account_base::generate(const crypto::secret_key& recovery_key, bool recover, bool two_random)
+  crypto::secret_key account_base_ext::generate(const crypto::secret_key& recovery_key, bool recover, bool two_random)
   {
     crypto::secret_key first = generate_keys(m_keys.m_account_address.m_spend_public_key, m_keys.m_spend_secret_key, recovery_key, recover);
 
@@ -88,12 +88,17 @@ DISABLE_VS_WARNINGS(4244 4345)
     return first;
   }
   //-----------------------------------------------------------------
-  const account_keys& account_base::get_keys() const
+  void account_base_ext::generate(cryptonote::account_public_address address, crypto::secret_key view_key) {
+    m_keys.m_account_address = address;
+    m_keys.m_view_secret_key = view_key;
+  }
+  //-----------------------------------------------------------------
+  const cryptonote::account_keys& account_base_ext::get_keys() const
   {
     return m_keys;
   }
   //-----------------------------------------------------------------
-  std::string account_base::get_public_address_str()
+  std::string account_base_ext::get_public_address_str()
   {
     //TODO: change this code into base 58
     return get_account_address_as_str(m_keys.m_account_address);
