@@ -28,21 +28,22 @@ int main(int argc, char** argv)
 	if (argc == 5) {
 		host_ip = argv[1];
 		host_port = argv[2];
-		daemon_ip = argv[4];
+		daemon_ip = argv[3];
 		daemon_port = argv[4];
-
 	}
 	else {
 		std::cout << "Invalid number of Parameters!" << std::endl
 			<< "Usage: aeon_pocket host_ip host_port daemon_ip daemon_port" << std::endl
-			<< "Using default values" << std::endl
-			<< "host_ip: " << host_ip << std::endl
-			<< "host_port: " << host_port<<std::endl
-			<< "daemon_ip: " << daemon_ip<<std::endl
-			<< "daemon_port: " << daemon_port<<std::endl;
+			<< "Using default values" << std::endl;
 
 	}
-		aeon_pocket::rpc_server wrpc;
+	std::cout << "host_ip: " << host_ip << std::endl
+						<< "host_port: " << host_port<<std::endl
+						<< "daemon_ip: " << daemon_ip<<std::endl
+						<< "daemon_port: " << daemon_port<<std::endl;
+
+
+	aeon_pocket::rpc_server wrpc;
 		std::string daemon_address = std::string("http://") + daemon_ip + ":" + daemon_port;
 		bool r = wrpc.init2(host_ip, host_port);
 		wrpc.set_daemon_address(daemon_address);
