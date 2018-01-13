@@ -24,12 +24,32 @@ int main(int argc, char** argv)
 	std::string host_port = "11191";
 	std::string daemon_ip = "127.0.0.1";
 	std::string daemon_port= "11181";
-	aeon_pocket::rpc_server wrpc;
-	std::string daemon_address = std::string("http://") + daemon_ip + ":" + daemon_port;
-	bool r = wrpc.init2(host_ip,host_port);
-	wrpc.set_daemon_address(daemon_address);
-	CHECK_AND_ASSERT_MES(r, 1, "Failed to initialize wallet rpc server");
-	LOG_PRINT_L0("Starting wallet rpc server");
-	wrpc.run();
+
+	if (argc == 5) {
+		host_ip = argv[1];
+		host_port = argv[2];
+		daemon_ip = argv[4];
+		daemon_port = argv[4];
+
+	}
+	else {
+		std::cout << "Invalid number of Parameters!" << std::endl
+			<< "Usage: aeon_pocket host_ip host_port daemon_ip daemon_port" << std::endl
+			<< "Using default values" << std::endl
+			<< "host_ip: " << host_ip << std::endl
+			<< "host_port: " << host_port<<std::endl
+			<< "daemon_ip: " << daemon_ip<<std::endl
+			<< "daemon_port: " << daemon_port<<std::endl;
+
+	}
+		aeon_pocket::rpc_server wrpc;
+		std::string daemon_address = std::string("http://") + daemon_ip + ":" + daemon_port;
+		bool r = wrpc.init2(host_ip, host_port);
+		wrpc.set_daemon_address(daemon_address);
+		CHECK_AND_ASSERT_MES(r, 1, "Failed to initialize wallet rpc server");
+		LOG_PRINT_L0("Starting wallet rpc server");
+		wrpc.run();
+		return 0;
+	
 	return 1;
 }
