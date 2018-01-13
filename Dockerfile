@@ -14,4 +14,4 @@ RUN cmake ../.. && make
 
 EXPOSE 11191
 
-CMD ./build/release/src/aeon_pocket 0.0.0.0 11191 ${DAEMON_HOST} ${DAEMON_PORT}
+CMD src/aeon_pocket 0.0.0.0 11191 ${DAEMON_HOST} ${DAEMON_PORT}
