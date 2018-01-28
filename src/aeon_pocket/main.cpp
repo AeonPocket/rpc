@@ -43,16 +43,14 @@ int main(int argc, char** argv)
 						<< "daemon_ip: " << daemon_ip<<std::endl
 						<< "daemon_port: " << daemon_port<<std::endl;
 
-	epee::log_space::log_singletone::get_set_log_detalisation_level(true, 4);
-    epee::log_space::log_singletone::add_logger(LOGGER_CONSOLE, NULL, NULL, LOG_LEVEL_4);
+	epee::log_space::log_singletone::get_set_log_detalisation_level(true, LOG_LEVEL_2);
+	epee::log_space::log_singletone::add_logger(LOGGER_CONSOLE, NULL, NULL, LOG_LEVEL_4);
 	aeon_pocket::rpc_server wrpc;
-		std::string daemon_address = std::string("http://") + daemon_ip + ":" + daemon_port;
-		bool r = wrpc.init2(host_ip, host_port);
-		wrpc.set_daemon_address(daemon_address);
-		CHECK_AND_ASSERT_MES(r, 1, "Failed to initialize wallet rpc server");
-		LOG_PRINT_L4("Starting wallet rpc server");
-		wrpc.run();
-		return 0;
-	
-	return 1;
+	std::string daemon_address = std::string("http://") + daemon_ip + ":" + daemon_port;
+	bool r = wrpc.init2(host_ip, host_port);
+	wrpc.set_daemon_address(daemon_address);
+	CHECK_AND_ASSERT_MES(r, 1, "Failed to initialize wallet rpc server");
+	LOG_PRINT_L4("Starting wallet rpc server");
+	wrpc.run();
+	return 0;
 }

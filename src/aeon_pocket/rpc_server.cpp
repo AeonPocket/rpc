@@ -112,7 +112,7 @@ namespace aeon_pocket
   {
     try
     {
-     aeon_pocket::web_wallet* m_wallet = new aeon_pocket::web_wallet();
+      aeon_pocket::web_wallet* m_wallet = new aeon_pocket::web_wallet();
       create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);
       res.address = m_wallet->get_account().get_public_address_str();
       res.key = string_tools::pod_to_hex(m_wallet->get_account().get_keys().m_view_secret_key);

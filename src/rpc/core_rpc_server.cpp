@@ -254,9 +254,9 @@ namespace cryptonote
 
       if(!m_core.handle_incoming_tx(tx_blob, tvc, false))
       {
-	LOG_PRINT_L0("[on_send_raw_tx]: Failed to process tx");
-	res.status = "Failed";
-	return true;
+        LOG_PRINT_L0("[on_send_raw_tx]: Failed to process tx");
+        res.status = "Failed";
+        return true;
       }
     }
     if(tvc.m_verifivation_failed)
