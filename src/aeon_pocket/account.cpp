@@ -40,8 +40,8 @@ extern "C"
 {
 #include "crypto/keccak.h"
 }
-#include "cryptonote_core/cryptonote_basic_impl.h"
-#include "cryptonote_core/cryptonote_format_utils.h"
+#include "cryptonote_basic/cryptonote_basic_impl.h"
+#include "cryptonote_basic/cryptonote_format_utils.h"
 using namespace std;
 
 DISABLE_VS_WARNINGS(4244 4345)
@@ -101,7 +101,7 @@ namespace aeon_pocket
   std::string account_base_ext::get_public_address_str()
   {
     //TODO: change this code into base 58
-    return get_account_address_as_str(m_keys.m_account_address);
+    return get_account_address_as_str(cryptonote::network_type::MAINNET, false, m_keys.m_account_address);
   }
   //-----------------------------------------------------------------
 }

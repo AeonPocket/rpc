@@ -36,13 +36,13 @@ using namespace epee;
 #include <iostream>
 #include "rpc_server.h"
 #include "common/command_line.h"
-#include "cryptonote_core/cryptonote_format_utils.h"
+#include "cryptonote_basic/cryptonote_format_utils.h"
 #include "account.h"
 #include "rpc_server_commands_defs.h"
 #include "misc_language.h"
 #include "string_tools.h"
 #include "crypto/hash.h"
-#include "crypto/electrum-words.h"
+#include "mnemonics/electrum-words.h"
 #include "wallet/wallet2.h"
 #include "rpc/core_rpc_server_commands_defs.h"
 
@@ -86,7 +86,13 @@ namespace aeon_pocket
     m_net_server.set_threads_prefix("RPC");
     bool r = handle_command_line(vm);
     CHECK_AND_ASSERT_MES(r, false, "Failed to process command line in core_rpc_server");
-    return epee::http_server_impl_base<rpc_server, connection_context>::init(m_port, m_bind_ip);
+    auto rng = [](size_t len, uint8_t *ptr) { return crypto::rand(len, ptr); };
+    std::vector<std::string> accessCtrl;
+    accessCtrl.push_back("*");
+    return epee::http_server_impl_base<rpc_server, connection_context>::init(
+      rng, std::move(m_port), std::move(m_bind_ip), std::move(accessCtrl)
+    );
+    // return epee::http_server_impl_base<rpc_server, connection_context>::init(m_port, m_bind_ip);
   }
   //------------------------------------------------------------------------------------------------------------------------------
   bool rpc_server::init2(std::string bind_ip, std::string bind_port )
@@ -94,7 +100,13 @@ namespace aeon_pocket
 	  m_bind_ip = bind_ip;
 	  m_port = bind_port;
 	  m_net_server.set_threads_prefix("RPC");
-	  return epee::http_server_impl_base<rpc_server, connection_context>::init(m_port, m_bind_ip);
+    auto rng = [](size_t len, uint8_t *ptr) { return crypto::rand(len, ptr); };
+    std::vector<std::string> accessCtrl;
+    accessCtrl.push_back("*");
+    return epee::http_server_impl_base<rpc_server, connection_context>::init(
+      rng, std::move(m_port), std::move(m_bind_ip), std::move(accessCtrl)
+    );
+	  // return epee::http_server_impl_base<rpc_server, connection_context>::init(m_port, m_bind_ip);
   }
   //------------------------------------------------------------------------------------------------------------------------------
   bool rpc_server::set_daemon_address(std::string& daemon_address) {
@@ -108,7 +120,7 @@ namespace aeon_pocket
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
+  bool rpc_server::on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er)
   {
     try
     {
@@ -171,7 +183,7 @@ namespace aeon_pocket
   //   return true;
   // }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
+  bool rpc_server::on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er)
   {
     try
     {
@@ -207,7 +219,7 @@ namespace aeon_pocket
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::on_refresh(const rpc::COMMAND_RPC_REFRESH::request& req, rpc::COMMAND_RPC_REFRESH::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx)
+  bool rpc_server::on_refresh(const rpc::COMMAND_RPC_REFRESH::request& req, rpc::COMMAND_RPC_REFRESH::response& res, epee::json_rpc::error& er)
   {
     try
     {
@@ -244,14 +256,14 @@ namespace aeon_pocket
     return true;
   }
   ////------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::on_get_transaction(const rpc::COMMAND_RPC_TRANSACTION_FULL::request &req, rpc::COMMAND_RPC_TRANSACTION_FULL::response &res, epee::json_rpc::error &er, connection_context &cntx)
+  bool rpc_server::on_get_transaction(const rpc::COMMAND_RPC_TRANSACTION_FULL::request &req, rpc::COMMAND_RPC_TRANSACTION_FULL::response &res, epee::json_rpc::error &er)
   {
       std::string err;
       cryptonote::COMMAND_RPC_GET_TRANSACTIONS::request request = boost::value_initialized<cryptonote::COMMAND_RPC_GET_TRANSACTIONS::request>();
       cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response response = boost::value_initialized<cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response>();
 
       request.txs_hashes.push_back(req.tx_hash);
-      bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/gettransactions", request, response, m_http_client);
+      bool r = net_utils::invoke_http_json(m_daemon_address + "/gettransactions", request, response, m_http_client);
       THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "/gettransactions");
       THROW_WALLET_EXCEPTION_IF(response.status == CORE_RPC_STATUS_BUSY, tools::error::daemon_busy, "/gettransactions");
       THROW_WALLET_EXCEPTION_IF(response.status != CORE_RPC_STATUS_OK, tools::error::get_out_indices_error, response.status);
@@ -316,7 +328,7 @@ namespace aeon_pocket
       return true;
   }
   ////------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::on_update_wallet(const rpc::COMMAND_RPC_UPDATE_WALLET::request &req, rpc::COMMAND_RPC_UPDATE_WALLET::response &res, epee::json_rpc::error &er, connection_context &cntx)
+  bool rpc_server::on_update_wallet(const rpc::COMMAND_RPC_UPDATE_WALLET::request &req, rpc::COMMAND_RPC_UPDATE_WALLET::response &res, epee::json_rpc::error &er)
   {
     cryptonote::transaction tx;
     crypto::public_key tx_pub_key;
@@ -328,7 +340,7 @@ namespace aeon_pocket
     cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response response1 = boost::value_initialized<cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response>();
 
     request1.txs_hashes.push_back(req.txid);
-    bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/gettransactions", request1, response1, m_http_client);
+    bool r = net_utils::invoke_http_json(m_daemon_address + "/gettransactions", request1, response1, m_http_client);
     THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "/gettransactions");
     THROW_WALLET_EXCEPTION_IF(response1.status == CORE_RPC_STATUS_BUSY, tools::error::daemon_busy, "/gettransactions");
     THROW_WALLET_EXCEPTION_IF(response1.status != CORE_RPC_STATUS_OK, tools::error::get_out_indices_error, response1.status);
@@ -364,7 +376,7 @@ namespace aeon_pocket
     cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::request request = AUTO_VAL_INIT(request);
     cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::response response = AUTO_VAL_INIT(response);
     string_tools::hex_to_pod(req.txid, request.txid);
-    r = net_utils::invoke_http_bin_remote_command2(m_daemon_address + "/get_o_indexes.bin", request, response, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+    r = net_utils::invoke_http_json(m_daemon_address + "/get_o_indexes.bin", request, response, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
     THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "get_o_indexes.bin");
     THROW_WALLET_EXCEPTION_IF(response.status == CORE_RPC_STATUS_BUSY, tools::error::daemon_busy, "get_o_indexes.bin");
     THROW_WALLET_EXCEPTION_IF(response.status != CORE_RPC_STATUS_OK, tools::error::get_out_indices_error, response.status);
@@ -422,7 +434,12 @@ namespace aeon_pocket
    for (auto it = destinations.begin(); it != destinations.end(); it++)
    {
      cryptonote::tx_destination_entry de;
-     if(!get_account_address_from_str(de.addr, it->address))
+     cryptonote::address_parse_info info;
+    //  info.address = de.addr,
+    //  info.is_subaddress = false;
+    //  info.has_payment_id = payment_id != NULL;
+    //  info.payment_id = crypto::hash8(payment_id);
+     if(!get_account_address_from_str(info, cryptonote::network_type::MAINNET, it->address))
      {
        er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
        er.message = std::string("WALLET_RPC_ERROR_CODE_WRONG_ADDRESS: ") + it->address;
@@ -461,7 +478,7 @@ namespace aeon_pocket
   }
 
   ////------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::on_transfer(const rpc::COMMAND_RPC_TRANSFER::request& req, rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, connection_context& cntx)
+  bool rpc_server::on_transfer(const rpc::COMMAND_RPC_TRANSFER::request& req, rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er)
   {
 
     aeon_pocket::web_wallet* m_wallet = new aeon_pocket::web_wallet();
@@ -476,7 +493,7 @@ namespace aeon_pocket
     }
 
     std::vector<cryptonote::tx_source_entry> sources;
-    sources = m_wallet->get_transaction_sources(dsts, req.mixin, req.unlock_time, req.fee, extra, aeon_pocket::detail::digit_split_strategy,
+    sources = m_wallet->get_transaction_sources(dsts, req.mixin, req.unlock_time, req.fee, extra, tools::detail::digit_split_strategy,
                                                 aeon_pocket::tx_dust_policy(req.fee));
 
     for (auto &source: sources) {
@@ -505,13 +522,13 @@ namespace aeon_pocket
   {
     cryptonote::COMMAND_RPC_GET_HEIGHT::request req;
     cryptonote::COMMAND_RPC_GET_HEIGHT::response res = boost::value_initialized<cryptonote::COMMAND_RPC_GET_HEIGHT::response>();
-    bool r = net_utils::invoke_http_json_remote_command2(m_daemon_address + "/getheight", req, res, m_http_client);
+    bool r = net_utils::invoke_http_json(m_daemon_address + "/getheight", req, res, m_http_client);
     THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "/getheight");
     err = interpret_rpc_response(r, res.status);
     return res.height;
   }
   //----------------------------------------------------------------------------------------------------
-  bool rpc_server::get_blockchain_height(const rpc::COMMAND_BC_HEIGHT::request& req, rpc::COMMAND_BC_HEIGHT::response& res, epee::json_rpc::error& er, connection_context& cntx)
+  bool rpc_server::get_blockchain_height(const rpc::COMMAND_BC_HEIGHT::request& req, rpc::COMMAND_BC_HEIGHT::response& res, epee::json_rpc::error& er)
   {
     std::string err;
     uint64_t bc_height = get_daemon_blockchain_height(err);
@@ -522,12 +539,12 @@ namespace aeon_pocket
     return true;
   }
   //----------------------------------------------------------------------------------------------------
-  bool rpc_server::on_send_raw_tx(const rpc::COMMAND_RPC_SEND_RAW_TX::request& req, rpc::COMMAND_RPC_SEND_RAW_TX::response& res, epee::json_rpc::error& er, connection_context& cntx)
+  bool rpc_server::on_send_raw_tx(const rpc::COMMAND_RPC_SEND_RAW_TX::request& req, rpc::COMMAND_RPC_SEND_RAW_TX::response& res, epee::json_rpc::error& er)
   {
     cryptonote::COMMAND_RPC_SEND_RAW_TX::request request;
     request.tx_as_hex = req.tx_as_hex;
     cryptonote::COMMAND_RPC_SEND_RAW_TX::response daemon_send_resp;
-    bool r = epee::net_utils::invoke_http_json_remote_command2(m_daemon_address + "/sendrawtransaction", req, daemon_send_resp, m_http_client, 200000);
+    bool r = epee::net_utils::invoke_http_json(m_daemon_address + "/sendrawtransaction", req, daemon_send_resp, m_http_client, std::chrono::minutes(3));
     THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "sendrawtransaction");
 
     res.status = daemon_send_resp.status;
@@ -678,7 +695,7 @@ namespace aeon_pocket
   //  return true;
   //}
   ////------------------------------------------------------------------------------------------------------------------------------
-  bool rpc_server::on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er, connection_context& cntx)
+  bool rpc_server::on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er)
   {
     aeon_pocket::web_wallet* m_wallet = new aeon_pocket::web_wallet();
     create_wallet_from_keys(m_wallet, req.address, req.view_key, req.account_create_time, req.local_bc_height, req.transfers, req.key_images);

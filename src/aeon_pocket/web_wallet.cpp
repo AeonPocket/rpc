@@ -38,16 +38,16 @@
 using namespace epee;
 
 #include "web_wallet.h"
-#include "cryptonote_core/cryptonote_format_utils.h"
+#include "cryptonote_basic/cryptonote_format_utils.h"
 #include "rpc/core_rpc_server_commands_defs.h"
 #include "misc_language.h"
-#include "cryptonote_core/cryptonote_basic_impl.h"
+#include "cryptonote_basic/cryptonote_basic_impl.h"
 #include "common/boost_serialization_helper.h"
 #include "profile_tools.h"
 #include "crypto/crypto.h"
 #include "serialization/binary_utils.h"
-#include "cryptonote_protocol/blobdatatype.h"
-#include "crypto/electrum-words.h"
+#include "cryptonote_basic/blobdatatype.h"
+#include "mnemonics/electrum-words.h"
 
 extern "C"
 {

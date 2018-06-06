@@ -50,7 +50,7 @@
 #include "wallet_errors.h"
 
 #include <iostream>
-#define WALLET_RCP_CONNECTION_TIMEOUT                          200000
+#define WALLET_RCP_CONNECTION_TIMEOUT                          std::chrono::minutes(3) + std::chrono::seconds(30)
 
 namespace aeon_pocket 
 {
@@ -375,7 +375,7 @@ namespace aeon_pocket
 				req.amounts.push_back(it->amount());
 			}
 
-			bool r = epee::net_utils::invoke_http_bin(m_daemon_address + "/getrandom_outs.bin", req, daemon_resp, m_http_client, 200000);
+			bool r = epee::net_utils::invoke_http_bin(m_daemon_address + "/getrandom_outs.bin", req, daemon_resp, m_http_client, std::chrono::minutes(3) + std::chrono::seconds(30));
 			THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getrandom_outs.bin");
 			THROW_AEON_POCKET_EXCEPTION_IF(daemon_resp.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getrandom_outs.bin");
 			THROW_AEON_POCKET_EXCEPTION_IF(daemon_resp.status != CORE_RPC_STATUS_OK, error::get_random_outs_error, daemon_resp.status);
@@ -413,7 +413,9 @@ namespace aeon_pocket
 						continue;
 					tx_output_entry oe;
 					oe.first = daemon_oe.global_amount_index;
-					oe.second = daemon_oe.out_key;
+					// oe.second = daemon_oe.out_key;
+					oe.second.dest = rct::pk2rct(daemon_oe.out_key);
+					oe.second.mask = rct::identity();
 					src.outputs.push_back(oe);
 					if (src.outputs.size() >= fake_outputs_count)
 						break;
@@ -428,7 +430,9 @@ namespace aeon_pocket
 			//size_t real_index = src.outputs.size() ? (rand() % src.outputs.size() ):0;
 			tx_output_entry real_oe;
 			real_oe.first = td.m_global_output_index;
-			real_oe.second = boost::get<txout_to_key>(td.m_tx.vout[td.m_internal_output_index].target).key;
+			// real_oe.second = boost::get<txout_to_key>(td.m_tx.vout[td.m_internal_output_index].target).key;
+			real_oe.second.dest = rct::pk2rct(boost::get<txout_to_key>(td.m_tx.vout[td.m_internal_output_index].target).key);
+      		real_oe.second.mask = rct::identity();
 			auto interted_it = src.outputs.insert(it_to_insert, real_oe);
 			src.real_out_tx_key = get_tx_pub_key_from_extra(td.m_tx);
 			src.real_output = interted_it - src.outputs.begin();
@@ -445,13 +449,16 @@ namespace aeon_pocket
 		}
 
 		uint64_t dust = 0;
-		std::vector<cryptonote::tx_destination_entry> splitted_dsts;
-		destination_split_strategy(dsts, change_dts, dust_policy.dust_threshold, splitted_dsts, dust);
-		THROW_AEON_POCKET_EXCEPTION_IF(dust_policy.dust_threshold < dust, error::wallet_internal_error, "invalid dust value: dust = " +
-			std::to_string(dust) + ", dust_threshold = " + std::to_string(dust_policy.dust_threshold));
-		if (0 != dust && !dust_policy.add_to_fee)
-		{
-			splitted_dsts.push_back(cryptonote::tx_destination_entry(dust, dust_policy.addr_for_dust));
+		std::vector<cryptonote::tx_destination_entry> splitted_dsts, dust_dsts;
+		destination_split_strategy(dsts, change_dts, dust_policy.dust_threshold, splitted_dsts, dust_dsts);
+		for(auto& d: dust_dsts) {
+			THROW_WALLET_EXCEPTION_IF(dust_policy.dust_threshold < d.amount, error::wallet_internal_error, "invalid dust value: dust = " +
+				std::to_string(d.amount) + ", dust_threshold = " + std::to_string(dust_policy.dust_threshold));
+		}
+		for(auto& d: dust_dsts) {
+			if (!dust_policy.add_to_fee)
+			splitted_dsts.push_back(cryptonote::tx_destination_entry(d.amount, dust_policy.addr_for_dust, d.is_subaddress));
+			dust += d.amount;
 		}
 
 		return sources;

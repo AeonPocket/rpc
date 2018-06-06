@@ -1,4 +1,12 @@
 set(aeon_pocket_sources
+  account.h
+  account.cpp
+  rpc_server_commands_defs.h
+  rpc_server.h
+  rpc_server.cpp
+  wallet_errors.h
+  web_wallet.h
+  web_wallet.cpp
   main.cpp)
 
 set(aeon_pocket_headers)

@@ -44,22 +44,22 @@ namespace aeon_pocket
     END_URI_MAP2()
 
       //json_rpc
-      bool on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er, connection_context& cntx);
-	    bool on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx);
-      bool on_refresh(const rpc::COMMAND_RPC_REFRESH::request& req, rpc::COMMAND_RPC_REFRESH::response& res, epee::json_rpc::error& er, rpc_server::connection_context& cntx);
+      bool on_set_wallet(const rpc::COMMAND_RPC_SET_WALLET::request& req, rpc::COMMAND_RPC_SET_WALLET::response& res, epee::json_rpc::error& er);
+	    bool on_getbalance(const rpc::COMMAND_RPC_GET_BALANCE::request& req, rpc::COMMAND_RPC_GET_BALANCE::response& res, epee::json_rpc::error& er);
+      bool on_refresh(const rpc::COMMAND_RPC_REFRESH::request& req, rpc::COMMAND_RPC_REFRESH::response& res, epee::json_rpc::error& er);
       bool validate_transfer(const std::list<rpc::transfer_destination> destinations, const std::string payment_id, std::vector<cryptonote::tx_destination_entry>& dsts, std::vector<uint8_t>& extra, epee::json_rpc::error& er);
-      bool on_transfer(const rpc::COMMAND_RPC_TRANSFER::request& req, rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er, connection_context& cntx);
-      bool on_get_transaction(const rpc::COMMAND_RPC_TRANSACTION_FULL::request& req, rpc::COMMAND_RPC_TRANSACTION_FULL::response& res, epee::json_rpc::error& er, connection_context& cntx);
-      bool on_update_wallet(const rpc::COMMAND_RPC_UPDATE_WALLET::request& req, rpc::COMMAND_RPC_UPDATE_WALLET::response& res, epee::json_rpc::error& er, connection_context& cntx);
-      bool on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er, connection_context& cntx);
-      bool on_send_raw_tx(const rpc::COMMAND_RPC_SEND_RAW_TX::request& req, rpc::COMMAND_RPC_SEND_RAW_TX::response& res, epee::json_rpc::error& er, connection_context& cntx);
+      bool on_transfer(const rpc::COMMAND_RPC_TRANSFER::request& req, rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er);
+      bool on_get_transaction(const rpc::COMMAND_RPC_TRANSACTION_FULL::request& req, rpc::COMMAND_RPC_TRANSACTION_FULL::response& res, epee::json_rpc::error& er);
+      bool on_update_wallet(const rpc::COMMAND_RPC_UPDATE_WALLET::request& req, rpc::COMMAND_RPC_UPDATE_WALLET::response& res, epee::json_rpc::error& era);
+      bool on_incoming_transfers(const rpc::COMMAND_RPC_INCOMING_TRANSFERS::request& req, rpc::COMMAND_RPC_INCOMING_TRANSFERS::response& res, epee::json_rpc::error& er);
+      bool on_send_raw_tx(const rpc::COMMAND_RPC_SEND_RAW_TX::request& req, rpc::COMMAND_RPC_SEND_RAW_TX::response& res, epee::json_rpc::error& er);
 
       bool handle_command_line(const boost::program_options::variables_map& vm);
 
       bool create_wallet_from_keys(aeon_pocket::web_wallet* m_wallet, std::string address, std::string view_key, uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string key_images);
       
       uint64_t get_daemon_blockchain_height(std::string& err);
-      bool get_blockchain_height(const rpc::COMMAND_BC_HEIGHT::request& req, rpc::COMMAND_BC_HEIGHT::response& res, epee::json_rpc::error& er, connection_context& cntx);
+      bool get_blockchain_height(const rpc::COMMAND_BC_HEIGHT::request& req, rpc::COMMAND_BC_HEIGHT::response& res, epee::json_rpc::error& er);
 
       inline std::string interpret_rpc_response(bool ok, const std::string& status)
       {
