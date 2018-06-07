@@ -48,7 +48,7 @@ using namespace epee;
 #include "serialization/binary_utils.h"
 #include "cryptonote_basic/blobdatatype.h"
 #include "mnemonics/electrum-words.h"
-
+#include "cryptonote_config.h"
 extern "C"
 {
 #include "crypto/keccak.h"
@@ -132,7 +132,7 @@ namespace aeon_pocket
 			cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::request req = AUTO_VAL_INIT(req);
 			cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::response res = AUTO_VAL_INIT(res);
 			req.txid = get_transaction_hash(tx);
-			bool r = net_utils::invoke_http_bin_remote_command2(m_daemon_address + "/get_o_indexes.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+			bool r = net_utils::invoke_http_json(m_daemon_address + "/get_o_indexes.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
 			THROW_AEON_POCKET_EXCEPTION_IF(!r, aeon_pocket::error::no_connection_to_daemon, "get_o_indexes.bin");
 			THROW_AEON_POCKET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "get_o_indexes.bin");
 			THROW_AEON_POCKET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_out_indices_error, res.status);
@@ -189,7 +189,7 @@ namespace aeon_pocket
 			if (get_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id))
 			{
 				uint64_t received = (tx_money_spent_in_ins < tx_money_got_in_outs) ? tx_money_got_in_outs - tx_money_spent_in_ins : 0;
-				if (0 < received && null_hash != payment_id)
+				if (0 < received && crypto::null_hash != payment_id)
 				{
 					payment_details payment;
 					payment.m_tx_hash = cryptonote::get_transaction_hash(tx);
@@ -260,7 +260,7 @@ namespace aeon_pocket
 			if (get_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id))
 			{
 				uint64_t received = (tx_money_spent_in_ins < tx_money_got_in_outs) ? tx_money_got_in_outs - tx_money_spent_in_ins : 0;
-				if (0 < received && null_hash != payment_id)
+				if (0 < received && crypto::null_hash != payment_id)
 				{
 					payment_details payment;
 					payment.m_tx_hash = cryptonote::get_transaction_hash(tx);
@@ -349,7 +349,7 @@ namespace aeon_pocket
 		cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::response res = AUTO_VAL_INIT(res);
 		get_short_chain_history(req.block_ids);
 		req.start_height = start_height;
-		bool r = net_utils::invoke_http_bin_remote_command2(m_daemon_address + "/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+		bool r = net_utils::invoke_http_json(m_daemon_address + "/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
 		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblocks.bin");
 		THROW_AEON_POCKET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblocks.bin");
 		THROW_AEON_POCKET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_blocks_error, res.status);
@@ -405,7 +405,7 @@ namespace aeon_pocket
 		blocks_fetched = 0;
 		size_t added_blocks = 0;
 		size_t try_count = 0;
-		crypto::hash last_tx_hash_id = m_transfers.size() ? get_transaction_hash(m_transfers.back().m_tx) : null_hash;
+		crypto::hash last_tx_hash_id = m_transfers.size() ? get_transaction_hash(m_transfers.back().m_tx) :crypto::null_hash;
 
 		while (m_run.load(std::memory_order_relaxed))
 		{
@@ -431,7 +431,7 @@ namespace aeon_pocket
 				}
 			}
 		}
-		if (last_tx_hash_id != (m_transfers.size() ? get_transaction_hash(m_transfers.back().m_tx) : null_hash))
+		if (last_tx_hash_id != (m_transfers.size() ? get_transaction_hash(m_transfers.back().m_tx) : crypto::null_hash))
 			received_money = true;
 
 		LOG_PRINT_L1("Refresh done, blocks received: " << blocks_fetched << ", balance: " << print_money(balance()) << ", unlocked: " << print_money(unlocked_balance()));
@@ -452,7 +452,7 @@ namespace aeon_pocket
 				cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::response res = AUTO_VAL_INIT(res);
 				get_short_chain_history(req.block_ids);
 				req.start_height = m_local_bc_height;
-				bool r = net_utils::invoke_http_bin_remote_command2(m_daemon_address + "/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+				bool r = net_utils::invoke_http_json(m_daemon_address + "/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
 				THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblocks.bin");
 				THROW_AEON_POCKET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblocks.bin");
 				THROW_AEON_POCKET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_blocks_error, res.status);
@@ -625,7 +625,8 @@ namespace aeon_pocket
 		m_blockchain.clear();
 		m_transfers.clear();
 		cryptonote::block b;
-		cryptonote::generate_genesis_block(b);
+		//cryptonote::generate_genesis_block(b);
+		cryptonote::generate_genesis_block(b,config::GENESIS_TX, config::GENESIS_NONCE);
 		m_blockchain.push_back(get_block_hash(b));
 		m_local_bc_height = 1;
 		return true;
@@ -638,11 +639,11 @@ namespace aeon_pocket
 		CHECK_AND_ASSERT_MES(r, false, "failed to serialize wallet keys");
 		web_wallet::keys_file_data keys_file_data = boost::value_initialized<web_wallet::keys_file_data>();
 
-		crypto::chacha8_key key;
-		crypto::generate_chacha8_key(password, key);
+		crypto::chacha_key key;
+		crypto::generate_chacha_key(password, key);
 		std::string cipher;
 		cipher.resize(account_data.size());
-		keys_file_data.iv = crypto::rand<crypto::chacha8_iv>();
+		keys_file_data.iv = crypto::rand<crypto::chacha_iv>();
 		crypto::chacha8(account_data.data(), account_data.size(), key, keys_file_data.iv, &cipher[0]);
 		keys_file_data.account_data = cipher;
 
@@ -673,8 +674,8 @@ namespace aeon_pocket
 		r = ::serialization::parse_binary(buf, keys_file_data);
 		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::wallet_internal_error, "internal error: failed to deserialize \"" + keys_file_name + '\"');
 
-		crypto::chacha8_key key;
-		crypto::generate_chacha8_key(password, key);
+		crypto::chacha_key key;
+		crypto::generate_chacha_key(password, key);
 		std::string account_data;
 		account_data.resize(keys_file_data.account_data.size());
 		crypto::chacha8(keys_file_data.account_data.data(), keys_file_data.account_data.size(), key, keys_file_data.iv, &account_data[0]);
@@ -703,7 +704,7 @@ namespace aeon_pocket
 		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::file_save_error, m_keys_file);
 
 		r = file_io_utils::save_string_to_file(m_wallet_file + ".address.txt", m_account.get_public_address_str());
-		if (!r) LOG_PRINT_RED_L0("String with address text not saved");
+		//if (!r) LOG_PRINT_RED_L0("String with address text not saved");
 
 		store();
 		return retval;
@@ -746,8 +747,9 @@ namespace aeon_pocket
 		net_utils::http::url_content u;
 		net_utils::parse_url(m_daemon_address, u);
 		if (!u.port)
-			u.port = RPC_DEFAULT_PORT;
-		return m_http_client.connect(u.host, std::to_string(u.port), WALLET_RCP_CONNECTION_TIMEOUT);
+			u.port = config::RPC_DEFAULT_PORT;
+		//return m_http_client.connect(u.host, std::to_string(u.port), WALLET_RCP_CONNECTION_TIMEOUT);
+		return m_http_client.connect( WALLET_RCP_CONNECTION_TIMEOUT);
 	}
 	//----------------------------------------------------------------------------------------------------
 	void web_wallet::load(const std::string& wallet_, const std::string& password)
@@ -780,7 +782,7 @@ namespace aeon_pocket
 		if (m_blockchain.empty())
 		{
 			cryptonote::block b;
-			cryptonote::generate_genesis_block(b);
+			cryptonote::generate_genesis_block(b,config::GENESIS_TX, config::GENESIS_NONCE);
 			m_blockchain.push_back(get_block_hash(b));
 		}
 		m_local_bc_height = m_blockchain.size();
@@ -789,8 +791,8 @@ namespace aeon_pocket
 	void web_wallet::load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string address, std::string view_key, std::string key_images) {
 		cryptonote::account_public_address m_account_public_address;
 		crypto::secret_key m_account_view_key;
-
-		get_account_address_from_str(m_account_public_address, address);
+cryptonote::address_parse_info info;
+		get_account_address_from_str(info,cryptonote::network_type::MAINNET, address);
 		string_tools::hex_to_pod(view_key, m_account_view_key);
 
 		bool c = verify_keys(m_account_view_key, m_account_public_address.m_view_public_key);
@@ -869,7 +871,7 @@ namespace aeon_pocket
 		if (!is_tx_spendtime_unlocked(td.m_tx.unlock_time))
 			return false;
 
-		if (td.m_block_height + DEFAULT_TX_SPENDABLE_AGE > m_blockchain.size())
+		if (td.m_block_height + CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE> m_blockchain.size())
 			return false;
 
 		return true;
@@ -889,7 +891,7 @@ namespace aeon_pocket
 		{
 			//interpret as time
 			uint64_t current_time = static_cast<uint64_t>(time(NULL));
-			if (current_time + CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS >= unlock_time)
+			if (current_time +  CRYPTONOTE_LOCKED_TX_ALLOWED_DELTA_SECONDS_V2 >= unlock_time)
 				return true;
 			else
 				return false;
@@ -978,7 +980,7 @@ namespace aeon_pocket
 		COMMAND_RPC_SEND_RAW_TX::request req;
 		req.tx_as_hex = epee::string_tools::buff_to_hex_nodelimer(tx_to_blob(ptx.tx));
 		COMMAND_RPC_SEND_RAW_TX::response daemon_send_resp;
-		bool r = epee::net_utils::invoke_http_json_remote_command2(m_daemon_address + "/sendrawtransaction", req, daemon_send_resp, m_http_client, 200000);
+		bool r = epee::net_utils::invoke_http_json(m_daemon_address + "/sendrawtransaction", req, daemon_send_resp, m_http_client,std::chrono::minutes(3) + std::chrono::seconds(30) );
 		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "sendrawtransaction");
 		THROW_AEON_POCKET_EXCEPTION_IF(daemon_send_resp.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "sendrawtransaction");
 		THROW_AEON_POCKET_EXCEPTION_IF(daemon_send_resp.status != CORE_RPC_STATUS_OK, error::tx_rejected, ptx.tx, daemon_send_resp.status);
