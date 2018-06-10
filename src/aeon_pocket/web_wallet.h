@@ -90,7 +90,9 @@ namespace aeon_pocket
 			uint64_t m_global_output_index;
 			bool m_spent;
 			crypto::key_image m_key_image; //TODO: key_image stored twice :(
-
+			const crypto::public_key &get_public_key() const { 
+				return boost::get<const cryptonote::txout_to_key>(m_tx.vout[m_internal_output_index].target).key;
+			}
 			uint64_t amount() const { return m_tx.vout[m_internal_output_index].amount; }
 		};
 
@@ -375,7 +377,7 @@ namespace aeon_pocket
 				req.amounts.push_back(it->amount());
 			}
 
-			bool r = epee::net_utils::invoke_http_bin(m_daemon_address + "/getrandom_outs.bin", req, daemon_resp, m_http_client, std::chrono::minutes(3) + std::chrono::seconds(30));
+			bool r = epee::net_utils::invoke_http_bin("/getrandom_outs.bin", req, daemon_resp, m_http_client, std::chrono::minutes(3) + std::chrono::seconds(30));
 			THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getrandom_outs.bin");
 			THROW_AEON_POCKET_EXCEPTION_IF(daemon_resp.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getrandom_outs.bin");
 			THROW_AEON_POCKET_EXCEPTION_IF(daemon_resp.status != CORE_RPC_STATUS_OK, error::get_random_outs_error, daemon_resp.status);

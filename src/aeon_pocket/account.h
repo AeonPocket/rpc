@@ -50,6 +50,9 @@ namespace aeon_pocket
     const cryptonote::account_keys& get_keys() const;
     std::string get_public_address_str();
 
+    hw::device& get_device() const  {return m_keys.get_device();}
+    void set_device( hw::device &hwdev) {m_keys.set_device(hwdev);}
+
     uint64_t get_createtime() const { return m_creation_timestamp; }
     void set_createtime(uint64_t val) { m_creation_timestamp = val; }
 

@@ -85,11 +85,13 @@ namespace aeon_pocket
 	{
 		m_upper_transaction_size_limit = upper_transaction_size_limit;
 		m_daemon_address = daemon_address;
+		boost::optional<epee::net_utils::http::login> m_daemon_login;
+    	m_http_client.set_server(m_daemon_address, m_daemon_login, false);
 	}
 	//----------------------------------------------------------------------------------------------------
 	bool web_wallet::get_seed(std::string& electrum_words)
 	{
-		crypto::ElectrumWords::bytes_to_words(get_account().get_keys().m_spend_secret_key, electrum_words);
+		crypto::ElectrumWords::bytes_to_words(get_account().get_keys().m_spend_secret_key, electrum_words, "English");
 
 		crypto::secret_key second;
 		keccak((uint8_t *)&get_account().get_keys().m_spend_secret_key, sizeof(crypto::secret_key), (uint8_t *)&second, sizeof(crypto::secret_key));
@@ -122,7 +124,7 @@ namespace aeon_pocket
 		}
 
 		crypto::public_key tx_pub_key = pub_key_field.pub_key;
-		bool r = lookup_acc_outs(m_account.get_keys(), tx, tx_pub_key, outs, tx_money_got_in_outs);
+		bool r = lookup_acc_outs(m_account.get_keys(), tx, outs, tx_money_got_in_outs);
 		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
 
 		if (!outs.empty() && tx_money_got_in_outs)
@@ -132,7 +134,7 @@ namespace aeon_pocket
 			cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::request req = AUTO_VAL_INIT(req);
 			cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::response res = AUTO_VAL_INIT(res);
 			req.txid = get_transaction_hash(tx);
-			bool r = net_utils::invoke_http_json(m_daemon_address + "/get_o_indexes.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+			bool r = net_utils::invoke_http_bin("/get_o_indexes.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
 			THROW_AEON_POCKET_EXCEPTION_IF(!r, aeon_pocket::error::no_connection_to_daemon, "get_o_indexes.bin");
 			THROW_AEON_POCKET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "get_o_indexes.bin");
 			THROW_AEON_POCKET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_out_indices_error, res.status);
@@ -153,7 +155,11 @@ namespace aeon_pocket
 				td.m_tx = tx;
 				td.m_spent = false;
 				cryptonote::keypair in_ephemeral;
-				cryptonote::generate_key_image_helper(m_account.get_keys(), tx_pub_key, o, in_ephemeral, td.m_key_image);
+				std::unordered_map<crypto::public_key, subaddress_index> m_subaddresses;
+				std::vector<crypto::public_key> additional_tx_pub_keys;
+				crypto::key_image ki;
+				// cryptonote::generate_key_image_helper(m_account.get_keys(), tx_pub_key, o, in_ephemeral, td.m_key_image);
+				cryptonote::generate_key_image_helper(m_account.get_keys(), m_subaddresses, td.get_public_key(), tx_pub_key,  additional_tx_pub_keys, td.m_internal_output_index, in_ephemeral, ki, m_account.get_device());
 				THROW_AEON_POCKET_EXCEPTION_IF(in_ephemeral.pub != boost::get<cryptonote::txout_to_key>(tx.vout[o].target).key,
 					error::wallet_internal_error, "key_image generated ephemeral public key not matched with output_key");
 
@@ -226,7 +232,7 @@ namespace aeon_pocket
 		}
 
 		crypto::public_key tx_pub_key = pub_key_field.pub_key;
-		bool r = lookup_acc_outs(m_account.get_keys(), tx, tx_pub_key, outs, tx_money_got_in_outs);
+		bool r = lookup_acc_outs(m_account.get_keys(), tx, outs, tx_money_got_in_outs);
 		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
 
 		uint64_t tx_money_spent_in_ins = 0;
@@ -349,7 +355,7 @@ namespace aeon_pocket
 		cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::response res = AUTO_VAL_INIT(res);
 		get_short_chain_history(req.block_ids);
 		req.start_height = start_height;
-		bool r = net_utils::invoke_http_json(m_daemon_address + "/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+		bool r = net_utils::invoke_http_bin("/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
 		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblocks.bin");
 		THROW_AEON_POCKET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblocks.bin");
 		THROW_AEON_POCKET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_blocks_error, res.status);
@@ -452,7 +458,7 @@ namespace aeon_pocket
 				cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::response res = AUTO_VAL_INIT(res);
 				get_short_chain_history(req.block_ids);
 				req.start_height = m_local_bc_height;
-				bool r = net_utils::invoke_http_json(m_daemon_address + "/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+				bool r = net_utils::invoke_http_bin("/getblocks.bin", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
 				THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "getblocks.bin");
 				THROW_AEON_POCKET_EXCEPTION_IF(res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "getblocks.bin");
 				THROW_AEON_POCKET_EXCEPTION_IF(res.status != CORE_RPC_STATUS_OK, error::get_blocks_error, res.status);
@@ -516,11 +522,14 @@ namespace aeon_pocket
 	}
 	//----------------------------------------------------------------------------------------------------
 	void web_wallet::update_wallet(transfer_details td, cryptonote::transaction tx, crypto::public_key tx_pub_key, size_t o) {
-		cryptonote::keypair in_ephemeral;
-		crypto::key_image keyimage;
-		cryptonote::generate_key_image_helper(m_account.get_keys(), tx_pub_key, o, in_ephemeral, keyimage);
-		THROW_AEON_POCKET_EXCEPTION_IF(in_ephemeral.pub != boost::get<cryptonote::txout_to_key>(tx.vout[o].target).key,
-			error::wallet_internal_error, "key_image generated ephemeral public key not matched with output_key");
+//		cryptonote::keypair in_ephemeral;
+		// cryptonote::generate_key_image_helper(m_account.get_keys(), tx_pub_key, o, in_ephemeral, keyimage);
+//		std::unordered_map<crypto::public_key, subaddress_index> m_subaddresses;
+//		std::vector<crypto::public_key> additional_tx_pub_keys;
+//		crypto::key_image ki;
+//		cryptonote::generate_key_image_helper(m_account.get_keys(), m_subaddresses, td.get_public_key(), tx_pub_key,  additional_tx_pub_keys, td.m_internal_output_index, in_ephemeral, ki, m_account.get_device());
+//		THROW_AEON_POCKET_EXCEPTION_IF(in_ephemeral.pub != boost::get<cryptonote::txout_to_key>(tx.vout[o].target).key,
+//			error::wallet_internal_error, "key_image generated ephemeral public key not matched with output_key");
 
 		m_transfers.push_back(td);
 		m_key_images[td.m_key_image] = m_transfers.size() - 1;
@@ -789,16 +798,15 @@ namespace aeon_pocket
 	}
 	//----------------------------------------------------------------------------------------------------
 	void web_wallet::load(uint64_t account_create_time, uint64_t local_bc_height, std::string transfers, std::string address, std::string view_key, std::string key_images) {
-		cryptonote::account_public_address m_account_public_address;
 		crypto::secret_key m_account_view_key;
-cryptonote::address_parse_info info;
+		cryptonote::address_parse_info info;
 		get_account_address_from_str(info,cryptonote::network_type::MAINNET, address);
 		string_tools::hex_to_pod(view_key, m_account_view_key);
 
-		bool c = verify_keys(m_account_view_key, m_account_public_address.m_view_public_key);
+		bool c = verify_keys(m_account_view_key, info.address.m_view_public_key);
 		THROW_AEON_POCKET_EXCEPTION_IF(!c, error::invalid_password);
 
-		m_account.generate(m_account_public_address, m_account_view_key);
+		m_account.generate(info.address, m_account_view_key);
 
 		m_account.set_createtime(account_create_time);
 		m_local_bc_height = local_bc_height;
@@ -980,7 +988,7 @@ cryptonote::address_parse_info info;
 		COMMAND_RPC_SEND_RAW_TX::request req;
 		req.tx_as_hex = epee::string_tools::buff_to_hex_nodelimer(tx_to_blob(ptx.tx));
 		COMMAND_RPC_SEND_RAW_TX::response daemon_send_resp;
-		bool r = epee::net_utils::invoke_http_json(m_daemon_address + "/sendrawtransaction", req, daemon_send_resp, m_http_client,std::chrono::minutes(3) + std::chrono::seconds(30) );
+		bool r = epee::net_utils::invoke_http_json("/sendrawtransaction", req, daemon_send_resp, m_http_client,std::chrono::minutes(3) + std::chrono::seconds(30) );
 		THROW_AEON_POCKET_EXCEPTION_IF(!r, error::no_connection_to_daemon, "sendrawtransaction");
 		THROW_AEON_POCKET_EXCEPTION_IF(daemon_send_resp.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "sendrawtransaction");
 		THROW_AEON_POCKET_EXCEPTION_IF(daemon_send_resp.status != CORE_RPC_STATUS_OK, error::tx_rejected, ptx.tx, daemon_send_resp.status);

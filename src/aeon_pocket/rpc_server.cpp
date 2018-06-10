@@ -87,10 +87,17 @@ namespace aeon_pocket
     bool r = handle_command_line(vm);
     CHECK_AND_ASSERT_MES(r, false, "Failed to process command line in core_rpc_server");
     auto rng = [](size_t len, uint8_t *ptr) { return crypto::rand(len, ptr); };
-    std::vector<std::string> accessCtrl;
-    accessCtrl.push_back("*");
+    // std::vector<std::string> accessCtrl;
+    // boost::optional<epee::net_utils::http::login> http_login{};
+    // std::array<std::uint8_t, 16> rand_128bit{{}};
+    // crypto::rand(rand_128bit.size(), rand_128bit.data());
+    // http_login.emplace(
+    //   "aeon",
+    //   epee::string_encoding::base64_encode(rand_128bit.data(), rand_128bit.size())
+    // );
+    // accessCtrl.push_back("*");
     return epee::http_server_impl_base<rpc_server, connection_context>::init(
-      rng, std::move(m_port), std::move(m_bind_ip), std::move(accessCtrl)
+      rng, std::move(m_port), std::move(m_bind_ip)
     );
     // return epee::http_server_impl_base<rpc_server, connection_context>::init(m_port, m_bind_ip);
   }
@@ -101,16 +108,18 @@ namespace aeon_pocket
 	  m_port = bind_port;
 	  m_net_server.set_threads_prefix("RPC");
     auto rng = [](size_t len, uint8_t *ptr) { return crypto::rand(len, ptr); };
-    std::vector<std::string> accessCtrl;
-    accessCtrl.push_back("*");
+    // std::vector<std::string> accessCtrl;
+    // accessCtrl.push_back("*");
     return epee::http_server_impl_base<rpc_server, connection_context>::init(
-      rng, std::move(m_port), std::move(m_bind_ip), std::move(accessCtrl)
+      rng, std::move(m_port), std::move(m_bind_ip)
     );
 	  // return epee::http_server_impl_base<rpc_server, connection_context>::init(m_port, m_bind_ip);
   }
   //------------------------------------------------------------------------------------------------------------------------------
   bool rpc_server::set_daemon_address(std::string& daemon_address) {
 	  m_daemon_address = daemon_address;
+    boost::optional<epee::net_utils::http::login> m_daemon_login;
+    m_http_client.set_server(m_daemon_address, m_daemon_login, false);
 	  return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
@@ -263,7 +272,7 @@ namespace aeon_pocket
       cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response response = boost::value_initialized<cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response>();
 
       request.txs_hashes.push_back(req.tx_hash);
-      bool r = net_utils::invoke_http_json(m_daemon_address + "/gettransactions", request, response, m_http_client);
+      bool r = net_utils::invoke_http_json("/gettransactions", request, response, m_http_client);
       THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "/gettransactions");
       THROW_WALLET_EXCEPTION_IF(response.status == CORE_RPC_STATUS_BUSY, tools::error::daemon_busy, "/gettransactions");
       THROW_WALLET_EXCEPTION_IF(response.status != CORE_RPC_STATUS_OK, tools::error::get_out_indices_error, response.status);
@@ -340,7 +349,7 @@ namespace aeon_pocket
     cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response response1 = boost::value_initialized<cryptonote::COMMAND_RPC_GET_TRANSACTIONS::response>();
 
     request1.txs_hashes.push_back(req.txid);
-    bool r = net_utils::invoke_http_json(m_daemon_address + "/gettransactions", request1, response1, m_http_client);
+    bool r = net_utils::invoke_http_json("/gettransactions", request1, response1, m_http_client);
     THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "/gettransactions");
     THROW_WALLET_EXCEPTION_IF(response1.status == CORE_RPC_STATUS_BUSY, tools::error::daemon_busy, "/gettransactions");
     THROW_WALLET_EXCEPTION_IF(response1.status != CORE_RPC_STATUS_OK, tools::error::get_out_indices_error, response1.status);
@@ -376,7 +385,7 @@ namespace aeon_pocket
     cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::request request = AUTO_VAL_INIT(request);
     cryptonote::COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES::response response = AUTO_VAL_INIT(response);
     string_tools::hex_to_pod(req.txid, request.txid);
-    r = net_utils::invoke_http_json(m_daemon_address + "/get_o_indexes.bin", request, response, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
+    r = net_utils::invoke_http_bin("/get_o_indexes.bin", request, response, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
     THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "get_o_indexes.bin");
     THROW_WALLET_EXCEPTION_IF(response.status == CORE_RPC_STATUS_BUSY, tools::error::daemon_busy, "get_o_indexes.bin");
     THROW_WALLET_EXCEPTION_IF(response.status != CORE_RPC_STATUS_OK, tools::error::get_out_indices_error, response.status);
@@ -522,7 +531,7 @@ namespace aeon_pocket
   {
     cryptonote::COMMAND_RPC_GET_HEIGHT::request req;
     cryptonote::COMMAND_RPC_GET_HEIGHT::response res = boost::value_initialized<cryptonote::COMMAND_RPC_GET_HEIGHT::response>();
-    bool r = net_utils::invoke_http_json(m_daemon_address + "/getheight", req, res, m_http_client);
+    bool r = net_utils::invoke_http_json("/getheight", req, res, m_http_client, WALLET_RCP_CONNECTION_TIMEOUT);
     THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "/getheight");
     err = interpret_rpc_response(r, res.status);
     return res.height;
@@ -544,7 +553,7 @@ namespace aeon_pocket
     cryptonote::COMMAND_RPC_SEND_RAW_TX::request request;
     request.tx_as_hex = req.tx_as_hex;
     cryptonote::COMMAND_RPC_SEND_RAW_TX::response daemon_send_resp;
-    bool r = epee::net_utils::invoke_http_json(m_daemon_address + "/sendrawtransaction", req, daemon_send_resp, m_http_client, std::chrono::minutes(3));
+    bool r = epee::net_utils::invoke_http_json("/sendrawtransaction", req, daemon_send_resp, m_http_client, std::chrono::minutes(3));
     THROW_WALLET_EXCEPTION_IF(!r, tools::error::no_connection_to_daemon, "sendrawtransaction");
 
     res.status = daemon_send_resp.status;
