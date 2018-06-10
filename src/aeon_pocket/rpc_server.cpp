@@ -515,8 +515,8 @@ namespace aeon_pocket
       for (auto &output: source.outputs) {
         rpc::COMMAND_RPC_TRANSFER::output out;
         out.index = output.first;
-        out.key = string_tools::pod_to_hex(output.second);
-
+        out.key = string_tools::pod_to_hex(output.second.dest);
+        out.mask = string_tools::pod_to_hex(output.second.mask);
         src.outputs.push_back(out);
       }
 

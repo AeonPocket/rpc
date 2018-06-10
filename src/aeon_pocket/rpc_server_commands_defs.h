@@ -304,10 +304,12 @@ namespace rpc
     struct output {
       uint64_t index;
       std::string key;
+      std::string mask;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(index)
         KV_SERIALIZE(key)
+        KV_SERIALIZE(mask)
       END_KV_SERIALIZE_MAP()
     };
 
